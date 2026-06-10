@@ -1708,3 +1708,39 @@ a.btn-primary, a.btn-secondary, a.btn-cta-secondary {
     align-items: center;
     justify-content: center;
 }
+
+/* Our Standards image */
+.process-image img {
+    width: 100%;
+    max-width: 1100px;
+    height: auto;
+    border-radius: 18px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Why Choose Us image */
+.why-image img {
+    width: 100%;
+    max-width: 1100px;
+    height: auto;
+    border-radius: 18px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* How It Works section */
+.howitworks-section {
+    padding: clamp(60px, 8vw, 100px) clamp(20px, 5vw, 60px);
+    background: #fff;
+}
+
+/* Who We Serve image */
+.audience-image img {
+    width: 100%;
+    max-width: 1100px;
+    height: auto;
+    border-radius: 18px;
+    display: block;
+    margin: 0 auto;
+}

@@ -65,22 +65,8 @@ export default function HomePage() {
       {/* Why Choose Us */}
       <section className="why-section">
         <div className="why-inner">
-          <p className="why-label">WHY CHOOSE US</p>
-          <h2 className="why-title">Why Our Microgreens?</h2>
-          <p className="why-subtitle">We grow with intention — no shortcuts, no chemicals, just pure nutrition delivered fresh to your door.</p>
-          <div className="why-grid">
-            {[
-              ['🌱', 'Grown Fresh', 'Harvested within 24 hours of delivery so you get maximum nutrients every time.'],
-              ['🧪', '100% Chemical Free', 'No pesticides, no herbicides. Just clean water, quality seeds, and sunlight.'],
-              ['📦', 'Farm to Door', 'Delivered weekly straight from our farm to your doorstep — no middlemen.'],
-              ['💪', 'Up to 40x Nutrients', 'Microgreens pack up to 40x more nutrients than their full-grown counterparts.'],
-            ].map(([i, t, d]) => (
-              <div className="why-card" key={t}>
-                <div className="why-icon">{i}</div>
-                <h3>{t}</h3>
-                <p>{d}</p>
-              </div>
-            ))}
+          <div className="why-image">
+            <img src="/images/why-choose-us.png" alt="Why Our Microgreens — grown fresh and harvested within 24 hours, 100% chemical free, delivered farm to door, up to 40x more nutrients" />
           </div>
         </div>
       </section>
@@ -119,32 +105,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Growing Process */}
+      {/* Our Standards */}
       <section className="process-section">
         <div className="process-inner">
-          <p className="section-label">SEED TO PLATE</p>
-          <h2 className="section-title">How We Grow</h2>
-          <p className="section-subtitle">Transparency is part of what we deliver. Here is exactly how your microgreens go from seed to your table.</p>
-          <div className="process-steps">
-            {[
-              ['🌰', '01', 'Seed Sourcing', 'We source non-GMO, untreated seeds from verified agricultural suppliers. Each batch is checked for germination quality before use.'],
-              ['🪴', '02', 'Growing Medium', 'We use food-grade coco peat trays — no soil, no chemicals. The medium is sterile, pH-balanced, and replaced fresh with every batch.'],
-              ['💧', '03', 'Water Quality', 'Only RO-purified water is used throughout the growing cycle. No borewell water, no municipal water — just clean, filtered hydration.'],
-              ['🌡️', '04', 'Controlled Environment', 'Temperature, humidity, and airflow are monitored daily. Our grow space maintains optimal conditions year-round — independent of seasonal variation.'],
-              ['✂️', '05', 'Harvesting', 'Each tray is harvested by hand at the 7–14 day mark — exactly when nutrient concentration is highest, before any decline begins.'],
-              ['📦', '06', 'Packaging & Delivery', 'Packed in sealed, food-safe containers within hours of harvest. Delivered directly to your address — no cold storage, no extended transit time.'],
-            ].map(([i, n, t, d]) => (
-              <div className="process-step" key={n}>
-                <div className="process-icon-wrap">
-                  <span className="process-icon">{i}</span>
-                </div>
-                <div className="process-content">
-                  <span className="process-num">{n}</span>
-                  <h3>{t}</h3>
-                  <p>{d}</p>
-                </div>
-              </div>
-            ))}
+          <div className="process-image">
+            <img src="/images/our-standards.png" alt="Our Standards — What You Get: quality-checked seeds, clean soil-free growing, purified water, controlled conditions, hand-harvested at peak nutrition, delivered fresh" />
           </div>
         </div>
       </section>
@@ -184,26 +149,20 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <section className="howitworks-section">
+        <div className="process-inner">
+          <div className="process-image">
+            <img src="/images/how-it-works.png" alt="How It Works — choose your plan, we grow and harvest the morning of delivery, delivered fresh within hours, pause or modify anytime with 48 hours' notice" />
+          </div>
+        </div>
+      </section>
+
       {/* Who We Serve */}
       <section className="audience-section">
         <div className="audience-inner">
-          <p className="section-label">WHO WE SERVE</p>
-          <h2 className="section-title">Built for People Who<br/>Take Food Seriously</h2>
-          <div className="audience-grid">
-            {[
-              ['🧘', 'Health-Conscious Individuals', 'For those who read labels, cook intentionally, and want food that does more than just fill a plate.'],
-              ['🏋️', 'Fitness Enthusiasts', 'Clean fuel for training and recovery. No fillers, no processing — just dense plant nutrition.'],
-              ['👨‍👩‍👧', 'Families', 'Easy to add to everyday Indian meals. Safe, chemical-free, and gentle enough for children and elderly members.'],
-              ['💼', 'Working Professionals', 'No prep, no washing complexity. Add to any meal in seconds. A genuinely convenient way to eat better.'],
-              ['🍽️', 'Restaurants & Cafes', 'Bulk subscriptions available for commercial kitchens. Consistent quality, reliable delivery, and harvest-day freshness.'],
-              ['🌿', 'Wellness Practitioners', 'Nutritionists, Ayurvedic practitioners, and wellness coaches recommend microgreens to clients seeking food-first health support.'],
-            ].map(([i, t, d]) => (
-              <div className="audience-card" key={t}>
-                <span className="audience-icon">{i}</span>
-                <h3>{t}</h3>
-                <p>{d}</p>
-              </div>
-            ))}
+          <div className="audience-image">
+            <img src="/images/who-we-serve.png" alt="Who We Serve — health-conscious individuals, fitness enthusiasts, families, working professionals, restaurants and cafes, wellness practitioners" />
           </div>
         </div>
       </section>
