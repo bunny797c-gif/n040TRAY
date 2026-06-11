@@ -44,7 +44,7 @@ export default async function HomePage() {
           </div>
           <div className="hero-right">
             <div className="product-image">
-              <Image src={t(c, 'hero.image', '/images/img-1.jpg')} alt="Fresh Microgreens" width={798} height={1200} priority style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <Image src={t(c, 'hero.image', '/images/img-1.jpg')} alt="Fresh Microgreens" width={798} height={1200} priority style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
             </div>
             <Image src="/images/statsvertical.jpg" alt="Stats" className="stats-image stats-tab" width={450} height={900} priority />
           </div>

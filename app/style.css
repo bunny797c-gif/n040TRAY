@@ -848,14 +848,8 @@ body > .hero-bg {
 
 /* ── Why Microgreens Section ── */
 .why-micro-section {
-    margin-top: -300px;
+    margin-top: 0;
     padding: clamp(50px, 7vw, 100px) clamp(20px, 5vw, 80px);
-}
-
-@media (max-width: 991px) {
-    .why-micro-section {
-        margin-top: -90px;
-    }
 }
 
 .why-micro-inner {
@@ -921,7 +915,6 @@ body > .hero-bg {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 400px;
 }
 
 .why-micro-center img {
@@ -1084,26 +1077,16 @@ body > .hero-bg {
 .banner-section {
     width: 100%;
     line-height: 0;
-    margin-top: -90px;
-}
-
-@media (min-width: 769px) and (max-width: 991px) {
-    .banner-section {
-        margin-top: -140px;
-    }
-}
-
-@media (min-width: 992px) {
-    .banner-section {
-        margin-top: -220px;
-    }
+    margin-top: 0;
 }
 
 .banner-section img {
     width: 100%;
+    max-height: 200px;
     height: auto;
     display: block;
     object-fit: cover;
+    object-position: center;
 }
 
 /* ── Desktop only alignment ── */
