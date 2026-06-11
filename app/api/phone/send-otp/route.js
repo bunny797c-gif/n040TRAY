@@ -32,7 +32,7 @@ export async function POST(req) {
 
   // Generate + hash + store
   const otp = String(Math.floor(100000 + Math.random() * 900000));
-  const salt = process.env.OTP_SALT || 'praahis-default-salt';
+  const salt = process.env.OTP_SALT || 'n040tray-default-salt';
   const otpHash = hashOtp(otp, salt);
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 

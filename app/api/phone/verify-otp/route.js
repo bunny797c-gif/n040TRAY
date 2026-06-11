@@ -34,7 +34,7 @@ export async function POST(req) {
   if (new Date(pv.expires_at) < new Date()) return NextResponse.json({ error: 'OTP expired. Request a new one.' }, { status: 400 });
   if (pv.attempts >= 5) return NextResponse.json({ error: 'Too many attempts. Request a new OTP.' }, { status: 429 });
 
-  const salt = process.env.OTP_SALT || 'praahis-default-salt';
+  const salt = process.env.OTP_SALT || 'n040tray-default-salt';
   const submittedHash = hashOtp(otp, salt);
   if (submittedHash !== pv.otp_hash) {
     await admin.from('phone_verifications').update({ attempts: pv.attempts + 1 }).eq('id', pv.id);
