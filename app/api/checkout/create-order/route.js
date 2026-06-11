@@ -18,8 +18,14 @@ export async function POST(req) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
 
-  const { plan_id, address } = await req.json();
+  const { plan_id, address, variety_type, variety_choices } = await req.json();
   if (!plan_id || !address) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  if (!['single','mixed','rotation','individual','two_groups'].includes(variety_type)) {
+    return NextResponse.json({ error: 'Please select a variety preference.' }, { status: 400 });
+  }
+  if (['single','individual','two_groups'].includes(variety_type) && (!variety_choices || !variety_choices.length)) {
+    return NextResponse.json({ error: 'Please complete your variety selection.' }, { status: 400 });
+  }
 
   // Validate phone format strictly
   if (!/^[6-9]\d{9}$/.test(String(address.phone || ''))) {
@@ -84,6 +90,8 @@ export async function POST(req) {
       status: 'pending_payment',
       start_date: today,
       next_delivery_date: nextDeliveryDate(),
+      variety_type,
+      variety_choices: variety_choices ?? null,
     })
     .select()
     .single();

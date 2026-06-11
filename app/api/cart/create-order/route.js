@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Razorpay from 'razorpay';
 
-const ITEM_PRICE_INR = 149;
+const ITEM_PRICE_INR = 249;
 
 export async function POST(req) {
   const supabase = createClient();

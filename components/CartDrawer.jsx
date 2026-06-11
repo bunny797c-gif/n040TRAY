@@ -12,7 +12,7 @@ async function safeJson(res) {
 }
 
 // Price per 100g tray (one-time / à la carte)
-const ITEM_PRICE = 149;
+const ITEM_PRICE = 249;
 
 const DURATION_LABEL = {
   monthly: 'Monthly',
@@ -252,7 +252,7 @@ export default function CartDrawer({ open, onClose }) {
                     <span>Subtotal</span>
                     <strong>{inr(subtotal)}</strong>
                   </div>
-                  <p className="cart-delivery-note">Free Sunday delivery · Prices per 100g tray</p>
+                  <p className="cart-delivery-note">Free Sunday delivery · Prices per 60g tray</p>
 
                   <div className="cart-drawer-actions">
                     {user ? (

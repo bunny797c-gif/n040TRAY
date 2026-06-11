@@ -76,7 +76,7 @@ export default function PlansSelector({ plans }) {
                 <ul className="sub-plan-perks">
                   <li><span className="check">✓</span> {p.deliveries} fresh deliveries</li>
                   <li><span className="check">✓</span> {p.serving_label}</li>
-                  <li><span className="check">✓</span> {p.varieties_label} per delivery</li>
+                  <li><span className="check">✓</span> {p.varieties_label}</li>
                   <li><span className="check">✓</span> Free home delivery</li>
                   <li><span className="check">✓</span> Skip or pause anytime (Mon–Fri)</li>
                 </ul>

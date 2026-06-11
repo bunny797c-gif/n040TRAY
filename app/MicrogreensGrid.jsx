@@ -7,85 +7,97 @@ import { useCart } from '@/lib/cart';
 const MICROGREENS = [
   {
     emoji: '🌻',
+    image: '/images/mg-sunflower.png',
     bg: 'linear-gradient(135deg, #e8f5e0, #c8e6b0)',
     tag: 'BESTSELLER',
     name: 'Sunflower',
     taste: 'Nutty, mild, slightly sweet',
     desc: 'One of the most satisfying microgreens — thick stems with a satisfying crunch. Rich in Vitamin E, selenium, and healthy fats.',
-    uses: ['Salads', 'Sandwiches', 'Wraps'],
+    uses: ['On top of rice', 'With eggs', 'In salads'],
     nutrients: ['Vitamin E', 'Selenium', 'Healthy Fats', 'Zinc'],
     benefits: 'Supports skin health, immune function, and heart health. High antioxidant content helps fight oxidative stress.',
     growTime: '8–12 days',
-    servingSize: '30g per day',
+    servingSize: '60g tray',
+    dailyIntake: '15–20g per day',
   },
   {
     emoji: '🌶️',
+    image: '/images/mg-radish.png',
     bg: 'linear-gradient(135deg, #fdecea, #f5c4c0)',
     tag: 'BOLD FLAVOUR',
     tagClass: 'product-tag--spicy',
     name: 'Radish',
     taste: 'Peppery, sharp, clean finish',
     desc: 'High in folate and Vitamin C. A punchy addition that elevates any dish with colour and character.',
-    uses: ['Tacos', 'Garnish', 'Rice bowls'],
+    uses: ['On top of rice', 'With parathas', 'As a fresh garnish'],
     nutrients: ['Folate', 'Vitamin C', 'Potassium', 'Anthocyanins'],
     benefits: 'Supports digestion, detoxification, and immune health. The peppery bite comes from natural glucosinolates.',
     growTime: '6–10 days',
-    servingSize: '20g per day',
+    servingSize: '60g tray',
+    dailyIntake: '10–15g per day',
   },
   {
     emoji: '🫛',
+    image: '/images/mg-pea.png',
     bg: 'linear-gradient(135deg, #e0f0e8, #b8dfc8)',
     tag: 'FAMILY FRIENDLY',
     tagClass: 'product-tag--mild',
     name: 'Pea Shoots',
     taste: 'Sweet, fresh, garden-like',
     desc: 'Delicate and versatile. High in Vitamins A, C, and folate. A gentle flavour that works well with almost any meal.',
-    uses: ['Soups', 'Stir-fry', 'Dal'],
+    uses: ['Eaten fresh', 'On top of any meal', 'With curd rice'],
     nutrients: ['Vitamin A', 'Vitamin C', 'Folate', 'Plant Protein'],
     benefits: 'Supports eye health, immunity, and cell growth. Mild enough for children and elderly — a true family staple.',
     growTime: '10–14 days',
-    servingSize: '40g per day',
+    servingSize: '60g tray',
+    dailyIntake: '20–30g per day',
   },
   {
     emoji: '🥦',
+    image: '/images/mg-broccoli.png',
     bg: 'linear-gradient(135deg, #e8f5e0, #a8d890)',
     tag: 'HIGH NUTRITION',
     name: 'Broccoli',
     taste: 'Mild, earthy, clean',
     desc: 'Among the most studied microgreens for sulforaphane content. An effortless way to add nutrition to smoothies and bowls.',
-    uses: ['Smoothies', 'Bowls', 'Eggs'],
+    uses: ['On top of eggs', 'In smoothies', 'Eaten fresh'],
     nutrients: ['Sulforaphane', 'Vitamin K', 'Vitamin C', 'Glucoraphanin'],
     benefits: 'One of the most researched microgreens. Sulforaphane supports detox pathways, reduces inflammation, and may support cellular health.',
     growTime: '7–10 days',
-    servingSize: '25g per day',
+    servingSize: '60g tray',
+    dailyIntake: '15–20g per day',
   },
   {
     emoji: '🌾',
+    image: '/images/mg-wheatgrass.png',
     bg: 'linear-gradient(135deg, #fdf6e0, #f0e0a0)',
     tag: 'DETOX FAVOURITE',
     tagClass: 'product-tag--spicy',
     name: 'Wheatgrass',
     taste: 'Earthy, grassy, intense',
     desc: 'Traditionally consumed as a shot or in juices. Contains chlorophyll, iron, and enzymes that support digestion and energy.',
-    uses: ['Juice shots', 'Smoothies', 'Detox drinks'],
+    uses: ['Morning juice shot', 'In smoothies', 'Detox drink'],
     nutrients: ['Chlorophyll', 'Iron', 'Enzymes', 'Vitamin B12'],
     benefits: 'Supports blood purification, energy levels, and digestion. Rich in chlorophyll which alkalises the body and supports liver function.',
     growTime: '7–12 days',
-    servingSize: '30ml juice per day',
+    servingSize: '60g tray',
+    dailyIntake: '30ml juice per day',
   },
   {
     emoji: '🌿',
+    image: '/images/mg-fenugreek.png',
     bg: 'linear-gradient(135deg, #f0ede0, #d8c890)',
     tag: 'INDIAN KITCHEN',
     tagClass: 'product-tag--mild',
     name: 'Fenugreek',
     taste: 'Slightly bitter, aromatic',
     desc: 'A familiar flavour in Indian cooking. Supports blood sugar balance and digestion. Pairs naturally with traditional meals.',
-    uses: ['Dal', 'Roti', 'Chutneys'],
+    uses: ['Sprinkled on meals', 'With curd', 'Eaten fresh'],
     nutrients: ['Fiber', 'Iron', 'Diosgenin', 'Galactomannan'],
     benefits: 'Traditionally used in Ayurveda. Supports blood sugar regulation, digestion, and lactation. A natural fit for Indian cuisine.',
     growTime: '7–10 days',
-    servingSize: '20g per day',
+    servingSize: '60g tray',
+    dailyIntake: '10–15g per day',
   },
 ];
 
@@ -116,7 +128,9 @@ export default function MicrogreensGrid({ label, title, subtitle }) {
                 style={{ cursor: 'pointer' }}
               >
                 <div className="product-card-top" style={{ background: p.bg }}>
-                  <span className="product-emoji">{p.emoji}</span>
+                  {p.image
+                    ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+                    : <span className="product-emoji">{p.emoji}</span>}
                 </div>
                 <div className="product-card-body">
                   <div className={`product-tag ${p.tagClass || ''}`}>{p.tag}</div>
@@ -139,8 +153,10 @@ export default function MicrogreensGrid({ label, title, subtitle }) {
           <div className="mg-popup" onClick={(e) => e.stopPropagation()}>
             <button className="mg-close" onClick={() => setSelected(null)} aria-label="Close">✕</button>
 
-            <div className="mg-popup-top" style={{ background: selected.bg }}>
-              <span className="mg-popup-emoji">{selected.emoji}</span>
+            <div className="mg-popup-top" style={{ background: selected.bg, overflow: 'hidden', padding: selected.image ? 0 : undefined }}>
+              {selected.image
+                ? <img src={selected.image} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <span className="mg-popup-emoji">{selected.emoji}</span>}
               <div className={`product-tag ${selected.tagClass || ''}`} style={{ margin: '12px auto 0' }}>{selected.tag}</div>
             </div>
 
@@ -163,7 +179,8 @@ export default function MicrogreensGrid({ label, title, subtitle }) {
 
               <div className="mg-popup-meta">
                 <div><span>🕐 Grow Time</span><strong>{selected.growTime}</strong></div>
-                <div><span>🥗 Serving</span><strong>{selected.servingSize}</strong></div>
+                <div><span>📦 Tray Size</span><strong>{selected.servingSize}</strong></div>
+                <div><span>🥗 Daily Intake</span><strong>{selected.dailyIntake}</strong></div>
               </div>
 
               <div className="mg-popup-uses">
