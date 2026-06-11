@@ -44,7 +44,7 @@ export default async function HomePage() {
           </div>
           <div className="hero-right">
             <div className="product-image">
-              <Image src={t(c, 'hero.image', '/images/img-1.jpg')} alt="Fresh Microgreens" width={798} height={1200} priority style={{ width: '100%', height: 'auto' }} />
+              <Image src={t(c, 'hero.image', '/images/img-1.jpg')} alt="Fresh Microgreens" width={798} height={1200} priority style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <Image src="/images/statsvertical.jpg" alt="Stats" className="stats-image stats-tab" width={450} height={900} priority />
           </div>
@@ -65,7 +65,7 @@ export default async function HomePage() {
             <button className="why-micro-btn">KNOW MORE</button>
           </div>
           <div className="why-micro-center">
-            <Image src="/images/sec-2.jpg" alt="Microgreens illustration" width={752} height={1407} style={{ width: '100%' }} />
+            <Image src="/images/sec-2.png" alt="Microgreens illustration" width={752} height={1407} />
           </div>
           <div className="why-micro-right">
             {[
