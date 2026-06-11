@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HomeScripts from './HomeScripts';
+import MicrogreensGrid from './MicrogreensGrid';
 import { getSiteContent, t } from '@/lib/content';
 
 export const revalidate = 0;
@@ -26,7 +27,9 @@ export default async function HomePage() {
       <div className="hero-bg">
         <section className="hero">
           <div className="hero-left">
-            <div className="hero-label">{t(c, 'hero.label', 'THE TRAY MICROGREENS')}</div>
+            <div className="hero-label">
+              {t(c, 'hero.label', '') || <span className="brand-name">№40 <span className="brand-tray">TRAY</span></span>}
+            </div>
             <h1 className="hero-title">{lines(t(c, 'hero.title', 'Harvested Today.|On Your Plate|Tomorrow.'))}</h1>
             <p className="hero-subtitle">{lines(t(c, 'hero.subtitle', 'Fresh, nutrient-dense microgreens grown with care|and delivered at peak freshness.'))}</p>
             <div className="button-group">
@@ -86,38 +89,11 @@ export default async function HomePage() {
       </section>
 
       {/* Products */}
-      <section className="products-section" id="microgreens">
-        <div className="products-inner">
-          <p className="section-label">{t(c, 'varieties.label', 'OUR VARIETIES')}</p>
-          <h2 className="section-title">{t(c, 'varieties.title', 'Microgreens We Grow')}</h2>
-          <p className="section-subtitle">{t(c, 'varieties.subtitle', 'Each variety is grown in a dedicated batch, harvested at peak flavour, and packed the same day.')}</p>
-          <div className="products-grid">
-            {[
-              { emoji: '🌻', bg: 'linear-gradient(135deg, #e8f5e0, #c8e6b0)', tag: 'BESTSELLER', name: 'Sunflower', taste: 'Nutty, mild, slightly sweet', desc: 'One of the most satisfying microgreens — thick stems with a satisfying crunch. Rich in Vitamin E, selenium, and healthy fats.', uses: ['Salads','Sandwiches','Wraps'] },
-              { emoji: '🌶️', bg: 'linear-gradient(135deg, #fdecea, #f5c4c0)', tag: 'BOLD FLAVOUR', tagClass: 'product-tag--spicy', name: 'Radish', taste: 'Peppery, sharp, clean finish', desc: 'High in folate and Vitamin C. A punchy addition that elevates any dish with colour and character.', uses: ['Tacos','Garnish','Rice bowls'] },
-              { emoji: '🫛', bg: 'linear-gradient(135deg, #e0f0e8, #b8dfc8)', tag: 'FAMILY FRIENDLY', tagClass: 'product-tag--mild', name: 'Pea Shoots', taste: 'Sweet, fresh, garden-like', desc: 'Delicate and versatile. High in Vitamins A, C, and folate. A gentle flavour that works well with almost any meal.', uses: ['Soups','Stir-fry','Dal'] },
-              { emoji: '🥦', bg: 'linear-gradient(135deg, #e8f5e0, #a8d890)', tag: 'HIGH NUTRITION', name: 'Broccoli', taste: 'Mild, earthy, clean', desc: 'Among the most studied microgreens for sulforaphane content. An effortless way to add nutrition to smoothies and bowls.', uses: ['Smoothies','Bowls','Eggs'] },
-              { emoji: '🌾', bg: 'linear-gradient(135deg, #fdf6e0, #f0e0a0)', tag: 'DETOX FAVOURITE', tagClass: 'product-tag--spicy', name: 'Wheatgrass', taste: 'Earthy, grassy, intense', desc: 'Traditionally consumed as a shot or in juices. Contains chlorophyll, iron, and enzymes that support digestion and energy.', uses: ['Juice shots','Smoothies','Detox drinks'] },
-              { emoji: '🌿', bg: 'linear-gradient(135deg, #f0ede0, #d8c890)', tag: 'INDIAN KITCHEN', tagClass: 'product-tag--mild', name: 'Fenugreek', taste: 'Slightly bitter, aromatic', desc: 'A familiar flavour in Indian cooking. Supports blood sugar balance and digestion. Pairs naturally with traditional meals.', uses: ['Dal','Roti','Chutneys'] },
-            ].map((p) => (
-              <div className="product-card" key={p.name}>
-                <div className="product-card-top" style={{ background: p.bg }}>
-                  <span className="product-emoji">{p.emoji}</span>
-                </div>
-                <div className="product-card-body">
-                  <div className={`product-tag ${p.tagClass || ''}`}>{p.tag}</div>
-                  <h3>{p.name}</h3>
-                  <p className="product-taste">Taste: {p.taste}</p>
-                  <p className="product-desc">{p.desc}</p>
-                  <div className="product-uses">
-                    {p.uses.map((u) => <span key={u}>{u}</span>)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <MicrogreensGrid
+        label={t(c, 'varieties.label', 'OUR VARIETIES')}
+        title={t(c, 'varieties.title', 'Microgreens We Grow')}
+        subtitle={t(c, 'varieties.subtitle', 'Each variety is grown in a dedicated batch, harvested at peak flavour, and packed the same day.')}
+      />
 
       {/* Our Standards */}
       <section className="process-section">

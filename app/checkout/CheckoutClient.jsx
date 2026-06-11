@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+async function safeJson(res) {
+  try { return await res.json(); } catch { return { error: `Server error (${res.status})` }; }
+}
+
 function inr(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
 
 const DURATION_LABEL = {
@@ -73,7 +77,7 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone: form.phone }),
     });
-    const data = await res.json();
+    const data = await safeJson(res);
     setOtpBusy(false);
     if (!res.ok) {
       setOtpMessage({ type: 'error', text: data.error || 'Could not send OTP.' });
@@ -96,7 +100,7 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone: form.phone, otp }),
     });
-    const data = await res.json();
+    const data = await safeJson(res);
     setOtpBusy(false);
     if (!res.ok) {
       setOtpMessage({ type: 'error', text: data.error || 'Verification failed.' });

@@ -3,10 +3,14 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useCart } from '@/lib/cart';
+import BubbleMenu from './BubbleMenu';
+import CartDrawer from './CartDrawer';
 
 export default function Header() {
-  const [open, setOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [cartOpen, setCartOpen] = useState(false);
+  const { totalCount } = useCart();
   const supabase = createClient();
 
   useEffect(() => {
@@ -17,35 +21,64 @@ export default function Header() {
     return () => sub.subscription.unsubscribe();
   }, [supabase]);
 
+  const navItems = [
+    { label: 'SUBSCRIPTION PLANS', href: '/subscription', ariaLabel: 'Subscription Plans', rotation: -6, hoverStyles: { bgColor: '#4a7c59', textColor: '#ffffff' } },
+    { label: 'MICROGREENS', href: '/#microgreens', ariaLabel: 'Microgreens', rotation: 6, hoverStyles: { bgColor: '#7ab55c', textColor: '#ffffff' } },
+    { label: 'SEEDS', href: '/#', ariaLabel: 'Seeds', rotation: -6, hoverStyles: { bgColor: '#a8c98c', textColor: '#ffffff' } },
+  ];
+
   return (
-    <header className="header">
-      <div className="header-inner">
-        <div className="logo">
-          <Link href="/"><img src="/logo/logo.png" alt="The Tray Microgreens" /></Link>
-        </div>
-        <nav className={`nav ${open ? 'nav-open' : ''}`}>
-          <Link href="/subscription" onClick={() => setOpen(false)}>SUBSCRIPTION PLANS</Link>
-          <Link href="/#microgreens" onClick={() => setOpen(false)}>MICROGREENS</Link>
-          <Link href="/#" onClick={() => setOpen(false)}>SEEDS</Link>
-          {user ? (
-            <Link href="/account" onClick={() => setOpen(false)}>MY ACCOUNT</Link>
-          ) : (
-            <Link href="/login" onClick={() => setOpen(false)}>SIGN IN</Link>
-          )}
-        </nav>
-        <div className="header-right">
-          <div className="cart-icon">
-            <img src="/images/carticon.png" alt="Cart" />
+    <>
+      <header className="header">
+        <div className="header-inner">
+          <div className="logo">
+            <Link href="/"><img src="/logo/logo.png" alt="№40 TRAY" /></Link>
           </div>
-          <button
-            className={`hamburger ${open ? 'is-open' : ''}`}
-            aria-label="Toggle menu"
-            onClick={() => setOpen((o) => !o)}
-          >
-            <span></span><span></span><span></span>
-          </button>
+          {/* Desktop nav */}
+          <nav className="nav">
+            <Link href="/subscription">SUBSCRIPTION PLANS</Link>
+            <Link href="/#microgreens">MICROGREENS</Link>
+            <Link href="/#">SEEDS</Link>
+            {user ? (
+              <Link href="/account">MY ACCOUNT</Link>
+            ) : (
+              <Link href="/login">SIGN IN</Link>
+            )}
+          </nav>
+          {/* Right side: cart + auth + hamburger */}
+          <div className="header-right">
+            <button
+              className="cart-icon-btn"
+              onClick={() => setCartOpen(true)}
+              aria-label="Open cart"
+            >
+              <img src="/images/carticon.png" alt="Cart" />
+              {totalCount > 0 && (
+                <span className="cart-badge">{totalCount > 9 ? '9+' : totalCount}</span>
+              )}
+            </button>
+            {user ? (
+              <Link href="/account" className="mobile-auth-btn">MY ACCOUNT</Link>
+            ) : (
+              <Link href="/login" className="mobile-auth-btn">SIGN IN</Link>
+            )}
+            <div className="mobile-bubble-wrap">
+              <BubbleMenu
+                items={navItems}
+                menuAriaLabel="Toggle navigation"
+                menuBg="#4a7c59"
+                menuContentColor="#c8d4a6"
+                useFixedPosition={true}
+                animationEase="back.out(1.5)"
+                animationDuration={0.4}
+                staggerDelay={0.12}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+    </>
   );
 }
