@@ -38,22 +38,22 @@ export default async function HomePage() {
               <Link href="#microgreens" className="btn-secondary"><span>{t(c, 'hero.secondary_cta', 'SHOP MICROGREENS')}</span></Link>
             </div>
             <div className="badges">
-              <Image src="/images/stats.png" alt="Stats" className="stats-image stats-desktop" width={900} height={450} priority />
-              <Image src="/images/statsvertical.png" alt="Stats" className="stats-image stats-vertical" width={450} height={900} priority />
+              <Image src="/images/stats.jpg" alt="Stats" className="stats-image stats-desktop" width={900} height={450} priority />
+              <Image src="/images/statsvertical.jpg" alt="Stats" className="stats-image stats-vertical" width={450} height={900} priority />
             </div>
           </div>
           <div className="hero-right">
             <div className="product-image">
-              <Image src={t(c, 'hero.image', '/images/img-1.png')} alt="Fresh Microgreens" width={798} height={1200} priority style={{ width: '100%', height: 'auto' }} />
+              <Image src={t(c, 'hero.image', '/images/img-1.jpg')} alt="Fresh Microgreens" width={798} height={1200} priority style={{ width: '100%', height: 'auto' }} />
             </div>
-            <Image src="/images/statsvertical.png" alt="Stats" className="stats-image stats-tab" width={450} height={900} priority />
+            <Image src="/images/statsvertical.jpg" alt="Stats" className="stats-image stats-tab" width={450} height={900} priority />
           </div>
         </section>
       </div>
 
       {/* Banner */}
       <div className="banner-section">
-        <Image src="/images/bg-1.png" alt="Banner" width={1376} height={768} priority style={{ width: '100%', height: 'auto' }} />
+        <Image src="/images/bg-1.jpg" alt="Banner" width={1376} height={768} priority style={{ width: '100%', height: 'auto' }} />
       </div>
 
       {/* Why Microgreens */}
@@ -65,7 +65,7 @@ export default async function HomePage() {
             <button className="why-micro-btn">KNOW MORE</button>
           </div>
           <div className="why-micro-center">
-            <Image src="/images/sec-2.png" alt="Microgreens illustration" width={752} height={1407} style={{ width: '100%' }} />
+            <Image src="/images/sec-2.jpg" alt="Microgreens illustration" width={752} height={1407} style={{ width: '100%' }} />
           </div>
           <div className="why-micro-right">
             {[
@@ -84,7 +84,7 @@ export default async function HomePage() {
       <section className="why-section">
         <div className="why-inner">
           <div className="why-image">
-            <Image src={t(c, 'why_choose_us.image', '/images/why-choose-us.png')} alt="Why Our Microgreens — grown fresh and harvested within 24 hours, 100% chemical free, delivered farm to door, up to 40x more nutrients" width={1400} height={1120} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
+            <Image src={t(c, 'why_choose_us.image', '/images/why-choose-us.jpg')} alt="Why Our Microgreens — grown fresh and harvested within 24 hours, 100% chemical free, delivered farm to door, up to 40x more nutrients" width={1400} height={1120} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
           </div>
         </div>
       </section>
@@ -100,7 +100,7 @@ export default async function HomePage() {
       <section className="process-section">
         <div className="process-inner">
           <div className="process-image">
-            <Image src={t(c, 'our_standards.image', '/images/our-standards.png')} alt="Our Standards — What You Get: quality-checked seeds, clean soil-free growing, purified water, controlled conditions, hand-harvested at peak nutrition, delivered fresh" width={1400} height={934} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
+            <Image src={t(c, 'our_standards.image', '/images/our-standards.jpg')} alt="Our Standards — What You Get: quality-checked seeds, clean soil-free growing, purified water, controlled conditions, hand-harvested at peak nutrition, delivered fresh" width={1400} height={934} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
           </div>
         </div>
       </section>
@@ -144,7 +144,7 @@ export default async function HomePage() {
       <section className="howitworks-section">
         <div className="process-inner">
           <div className="process-image">
-            <Image src={t(c, 'how_it_works.image', '/images/how-it-works.png')} alt="How It Works — choose your plan, we grow and harvest the morning of delivery, delivered fresh within hours, pause or modify anytime with 48 hours' notice" width={1400} height={1120} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
+            <Image src={t(c, 'how_it_works.image', '/images/how-it-works.jpg')} alt="How It Works — choose your plan, we grow and harvest the morning of delivery, delivered fresh within hours, pause or modify anytime with 48 hours' notice" width={1400} height={1120} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
           </div>
         </div>
       </section>
@@ -153,7 +153,7 @@ export default async function HomePage() {
       <section className="audience-section">
         <div className="audience-inner">
           <div className="audience-image">
-            <Image src={t(c, 'who_we_serve.image', '/images/who-we-serve.png')} alt="Who We Serve — health-conscious individuals, fitness enthusiasts, families, working professionals, restaurants and cafes, wellness practitioners" width={1400} height={1120} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
+            <Image src={t(c, 'who_we_serve.image', '/images/who-we-serve.jpg')} alt="Who We Serve — health-conscious individuals, fitness enthusiasts, families, working professionals, restaurants and cafes, wellness practitioners" width={1400} height={1120} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
           </div>
         </div>
       </section>

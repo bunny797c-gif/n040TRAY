@@ -8,7 +8,7 @@ import { useCart } from '@/lib/cart';
 const MICROGREENS = [
   {
     emoji: '🌻',
-    image: '/images/mg-sunflower.png',
+    image: '/images/mg-sunflower.jpg',
     bg: 'linear-gradient(135deg, #e8f5e0, #c8e6b0)',
     tag: 'BESTSELLER',
     name: 'Sunflower',
@@ -23,7 +23,7 @@ const MICROGREENS = [
   },
   {
     emoji: '🌶️',
-    image: '/images/mg-radish.png',
+    image: '/images/mg-radish.jpg',
     bg: 'linear-gradient(135deg, #fdecea, #f5c4c0)',
     tag: 'BOLD FLAVOUR',
     tagClass: 'product-tag--spicy',
@@ -39,7 +39,7 @@ const MICROGREENS = [
   },
   {
     emoji: '🫛',
-    image: '/images/mg-pea.png',
+    image: '/images/mg-pea.jpg',
     bg: 'linear-gradient(135deg, #e0f0e8, #b8dfc8)',
     tag: 'FAMILY FRIENDLY',
     tagClass: 'product-tag--mild',
@@ -55,7 +55,7 @@ const MICROGREENS = [
   },
   {
     emoji: '🥦',
-    image: '/images/mg-broccoli.png',
+    image: '/images/mg-broccoli.jpg',
     bg: 'linear-gradient(135deg, #e8f5e0, #a8d890)',
     tag: 'HIGH NUTRITION',
     name: 'Broccoli',
@@ -70,7 +70,7 @@ const MICROGREENS = [
   },
   {
     emoji: '🌾',
-    image: '/images/mg-wheatgrass.png',
+    image: '/images/mg-wheatgrass.jpg',
     bg: 'linear-gradient(135deg, #fdf6e0, #f0e0a0)',
     tag: 'DETOX FAVOURITE',
     tagClass: 'product-tag--spicy',
@@ -86,7 +86,7 @@ const MICROGREENS = [
   },
   {
     emoji: '🌿',
-    image: '/images/mg-fenugreek.png',
+    image: '/images/mg-fenugreek.jpg',
     bg: 'linear-gradient(135deg, #f0ede0, #d8c890)',
     tag: 'INDIAN KITCHEN',
     tagClass: 'product-tag--mild',
