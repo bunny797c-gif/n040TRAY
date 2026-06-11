@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- soil base -->
+  <ellipse cx="100" cy="178" rx="72" ry="12" fill="#8B6340"/>
+  <rect x="28" y="170" width="144" height="18" rx="4" fill="#8B6340"/>
+  <rect x="28" y="170" width="144" height="6" rx="2" fill="#A0784E"/>
+
+  <!-- stems - radish has purple/pink stems -->
+  <!-- far left -->
+  <path d="M55 170 C53 152 50 135 46 115" stroke="#C0547A" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- left -->
+  <path d="M75 170 C73 150 70 132 67 108" stroke="#D4608A" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  <!-- center-left -->
+  <path d="M90 170 C89 150 87 130 85 105" stroke="#C04878" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- center-right -->
+  <path d="M110 170 C111 150 113 130 115 105" stroke="#C04878" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- right -->
+  <path d="M125 170 C127 150 130 132 133 108" stroke="#D4608A" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  <!-- far right -->
+  <path d="M145 170 C147 152 150 135 154 115" stroke="#C0547A" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+  <!-- leaf pairs - radish leaves are small heart/kidney shaped, bright green -->
+  <!-- far left pair -->
+  <ellipse cx="36" cy="109" rx="13" ry="7" fill="#4CBF6A" transform="rotate(-40,36,109)"/>
+  <ellipse cx="55" cy="107" rx="13" ry="7" fill="#3AAF58" transform="rotate(15,55,107)"/>
+
+  <!-- left pair -->
+  <ellipse cx="55" cy="100" rx="15" ry="8" fill="#4CBF6A" transform="rotate(-35,55,100)"/>
+  <ellipse cx="78" cy="98" rx="15" ry="8" fill="#5ACF74" transform="rotate(20,78,98)"/>
+
+  <!-- center-left pair -->
+  <ellipse cx="70" cy="90" rx="16" ry="8.5" fill="#3AB05E" transform="rotate(-30,70,90)"/>
+  <ellipse cx="98" cy="88" rx="16" ry="8.5" fill="#5ACF74" transform="rotate(28,98,88)"/>
+
+  <!-- center-right pair -->
+  <ellipse cx="102" cy="88" rx="16" ry="8.5" fill="#3AB05E" transform="rotate(-28,102,88)"/>
+  <ellipse cx="130" cy="90" rx="16" ry="8.5" fill="#5ACF74" transform="rotate(30,130,90)"/>
+
+  <!-- right pair -->
+  <ellipse cx="122" cy="98" rx="15" ry="8" fill="#4CBF6A" transform="rotate(-20,122,98)"/>
+  <ellipse cx="145" cy="100" rx="15" ry="8" fill="#3AAF58" transform="rotate(35,145,100)"/>
+
+  <!-- far right pair -->
+  <ellipse cx="145" cy="107" rx="13" ry="7" fill="#4CBF6A" transform="rotate(-15,145,107)"/>
+  <ellipse cx="164" cy="109" rx="13" ry="7" fill="#3AAF58" transform="rotate(40,164,109)"/>
+
+  <!-- notch on some leaves to give heart/radish-leaf shape -->
+  <ellipse cx="85" cy="90" rx="4" ry="3" fill="#E8F4DC" opacity="0.35" transform="rotate(-30,85,90)"/>
+  <ellipse cx="115" cy="90" rx="4" ry="3" fill="#E8F4DC" opacity="0.35" transform="rotate(30,115,90)"/>
+
+  <!-- vein details -->
+  <line x1="85" y1="90" x2="75" y2="83" stroke="#2A9048" stroke-width="0.8" opacity="0.6"/>
+  <line x1="115" y1="90" x2="125" y2="83" stroke="#2A9048" stroke-width="0.8" opacity="0.6"/>
+  <line x1="67" y1="92" x2="58" y2="86" stroke="#2A9048" stroke-width="0.7" opacity="0.6"/>
+  <line x1="133" y1="92" x2="142" y2="86" stroke="#2A9048" stroke-width="0.7" opacity="0.6"/>
+
+  <!-- tiny root hints at soil surface -->
+  <path d="M85 170 C83 175 80 178 78 180" stroke="#C04878" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <path d="M115 170 C117 175 120 178 122 180" stroke="#C04878" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+</svg>
