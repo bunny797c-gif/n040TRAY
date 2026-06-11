@@ -2,8 +2,22 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HomeScripts from './HomeScripts';
+import { getSiteContent, t } from '@/lib/content';
 
-export default function HomePage() {
+export const revalidate = 0;
+
+// Render admin-managed text that uses | as a line break
+function lines(text) {
+  const parts = String(text).split('|');
+  return parts.map((p, i) => (
+    <span key={i}>{p}{i < parts.length - 1 ? <br /> : null}</span>
+  ));
+}
+
+export default async function HomePage() {
+  const c = await getSiteContent();
+  const imgMax = Number(t(c, 'layout.image_max_width', 1100)) || 1100;
+  const imgStyle = { maxWidth: imgMax };
   return (
     <>
       <Header />
@@ -12,12 +26,12 @@ export default function HomePage() {
       <div className="hero-bg">
         <section className="hero">
           <div className="hero-left">
-            <div className="hero-label">THE TRAY MICROGREENS</div>
-            <h1 className="hero-title">Harvested Today.<br/>On Your Plate<br/>Tomorrow.</h1>
-            <p className="hero-subtitle">Fresh, nutrient-dense microgreens grown with care<br/>and delivered at peak freshness.</p>
+            <div className="hero-label">{t(c, 'hero.label', 'THE TRAY MICROGREENS')}</div>
+            <h1 className="hero-title">{lines(t(c, 'hero.title', 'Harvested Today.|On Your Plate|Tomorrow.'))}</h1>
+            <p className="hero-subtitle">{lines(t(c, 'hero.subtitle', 'Fresh, nutrient-dense microgreens grown with care|and delivered at peak freshness.'))}</p>
             <div className="button-group">
-              <Link href="/subscription" className="btn-primary"><span>START A SUBSCRIPTION</span></Link>
-              <Link href="#microgreens" className="btn-secondary"><span>SHOP MICROGREENS</span></Link>
+              <Link href="/subscription" className="btn-primary"><span>{t(c, 'hero.primary_cta', 'START A SUBSCRIPTION')}</span></Link>
+              <Link href="#microgreens" className="btn-secondary"><span>{t(c, 'hero.secondary_cta', 'SHOP MICROGREENS')}</span></Link>
             </div>
             <div className="badges">
               <img src="/images/stats.png" alt="Stats" className="stats-image stats-desktop" />
@@ -26,7 +40,7 @@ export default function HomePage() {
           </div>
           <div className="hero-right">
             <div className="product-image">
-              <img src="/images/img-1.png" alt="Fresh Microgreens" />
+              <img src={t(c, 'hero.image', '/images/img-1.png')} alt="Fresh Microgreens" />
             </div>
             <img src="/images/statsvertical.png" alt="Stats" className="stats-image stats-tab" />
           </div>
@@ -66,7 +80,7 @@ export default function HomePage() {
       <section className="why-section">
         <div className="why-inner">
           <div className="why-image">
-            <img src="/images/why-choose-us.png" alt="Why Our Microgreens — grown fresh and harvested within 24 hours, 100% chemical free, delivered farm to door, up to 40x more nutrients" />
+            <img style={imgStyle} src={t(c, 'why_choose_us.image', '/images/why-choose-us.png')} alt="Why Our Microgreens — grown fresh and harvested within 24 hours, 100% chemical free, delivered farm to door, up to 40x more nutrients" />
           </div>
         </div>
       </section>
@@ -74,9 +88,9 @@ export default function HomePage() {
       {/* Products */}
       <section className="products-section" id="microgreens">
         <div className="products-inner">
-          <p className="section-label">OUR VARIETIES</p>
-          <h2 className="section-title">Microgreens We Grow</h2>
-          <p className="section-subtitle">Each variety is grown in a dedicated batch, harvested at peak flavour, and packed the same day.</p>
+          <p className="section-label">{t(c, 'varieties.label', 'OUR VARIETIES')}</p>
+          <h2 className="section-title">{t(c, 'varieties.title', 'Microgreens We Grow')}</h2>
+          <p className="section-subtitle">{t(c, 'varieties.subtitle', 'Each variety is grown in a dedicated batch, harvested at peak flavour, and packed the same day.')}</p>
           <div className="products-grid">
             {[
               { emoji: '🌻', bg: 'linear-gradient(135deg, #e8f5e0, #c8e6b0)', tag: 'BESTSELLER', name: 'Sunflower', taste: 'Nutty, mild, slightly sweet', desc: 'One of the most satisfying microgreens — thick stems with a satisfying crunch. Rich in Vitamin E, selenium, and healthy fats.', uses: ['Salads','Sandwiches','Wraps'] },
@@ -109,7 +123,7 @@ export default function HomePage() {
       <section className="process-section">
         <div className="process-inner">
           <div className="process-image">
-            <img src="/images/our-standards.png" alt="Our Standards — What You Get: quality-checked seeds, clean soil-free growing, purified water, controlled conditions, hand-harvested at peak nutrition, delivered fresh" />
+            <img style={imgStyle} src={t(c, 'our_standards.image', '/images/our-standards.png')} alt="Our Standards — What You Get: quality-checked seeds, clean soil-free growing, purified water, controlled conditions, hand-harvested at peak nutrition, delivered fresh" />
           </div>
         </div>
       </section>
@@ -153,7 +167,7 @@ export default function HomePage() {
       <section className="howitworks-section">
         <div className="process-inner">
           <div className="process-image">
-            <img src="/images/how-it-works.png" alt="How It Works — choose your plan, we grow and harvest the morning of delivery, delivered fresh within hours, pause or modify anytime with 48 hours' notice" />
+            <img style={imgStyle} src={t(c, 'how_it_works.image', '/images/how-it-works.png')} alt="How It Works — choose your plan, we grow and harvest the morning of delivery, delivered fresh within hours, pause or modify anytime with 48 hours' notice" />
           </div>
         </div>
       </section>
@@ -162,7 +176,7 @@ export default function HomePage() {
       <section className="audience-section">
         <div className="audience-inner">
           <div className="audience-image">
-            <img src="/images/who-we-serve.png" alt="Who We Serve — health-conscious individuals, fitness enthusiasts, families, working professionals, restaurants and cafes, wellness practitioners" />
+            <img style={imgStyle} src={t(c, 'who_we_serve.image', '/images/who-we-serve.png')} alt="Who We Serve — health-conscious individuals, fitness enthusiasts, families, working professionals, restaurants and cafes, wellness practitioners" />
           </div>
         </div>
       </section>
@@ -231,9 +245,9 @@ export default function HomePage() {
       {/* Final CTA */}
       <section className="cta-section">
         <div className="cta-inner">
-          <p className="cta-label">READY TO START?</p>
-          <h2 className="cta-title">Your First Box,<br/>Harvested Tomorrow.</h2>
-          <p className="cta-subtitle">Join 200+ households receiving fresh microgreens every week. No commitment required on your first order.</p>
+          <p className="cta-label">{t(c, 'cta.label', 'READY TO START?')}</p>
+          <h2 className="cta-title">{lines(t(c, 'cta.title', 'Your First Box,|Harvested Tomorrow.'))}</h2>
+          <p className="cta-subtitle">{t(c, 'cta.subtitle', 'Join 200+ households receiving fresh microgreens every week. No commitment required on your first order.')}</p>
           <div className="cta-buttons">
             <Link href="/subscription" className="btn-primary cta-primary-btn"><span>START A SUBSCRIPTION</span></Link>
             <Link href="/#microgreens" className="btn-cta-secondary"><span>SHOP SINGLE ORDER</span></Link>
