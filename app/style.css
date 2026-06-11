@@ -1089,6 +1089,14 @@ body > .hero-bg {
     object-position: center;
 }
 
+@media (min-width: 992px) {
+    .banner-section img {
+        max-height: 320px;
+        object-fit: cover;
+        object-position: center;
+    }
+}
+
 /* ── Desktop only alignment ── */
 @media (min-width: 992px) {
     .hero-left { text-align: right; }
