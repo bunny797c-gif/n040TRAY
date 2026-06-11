@@ -65,7 +65,7 @@ export default async function HomePage() {
             <button className="why-micro-btn">KNOW MORE</button>
           </div>
           <div className="why-micro-center">
-            <Image src="/images/sec-2.png" alt="Microgreens illustration" width={752} height={1407} style={{ width: '100%', height: 'auto' }} />
+            <Image src="/images/sec-2.png" alt="Microgreens illustration" width={752} height={1407} style={{ width: '100%' }} />
           </div>
           <div className="why-micro-right">
             {[

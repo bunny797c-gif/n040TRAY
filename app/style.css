@@ -836,7 +836,7 @@ body > .hero-bg {
     aspect-ratio: 3 / 4;
     border-radius: 10px;
     overflow: hidden;
-    background-color: #8b6f47;
+    background-color: #d4e8c4;
 }
 
 .product-image img {
@@ -921,6 +921,7 @@ body > .hero-bg {
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 400px;
 }
 
 .why-micro-center img {
