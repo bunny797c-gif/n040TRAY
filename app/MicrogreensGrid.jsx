@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from '@/lib/cart';
 
 const MICROGREENS = [
@@ -127,9 +128,9 @@ export default function MicrogreensGrid({ label, title, subtitle }) {
                 onClick={() => setSelected(p)}
                 style={{ cursor: 'pointer' }}
               >
-                <div className="product-card-top" style={{ background: p.bg }}>
+                <div className="product-card-top" style={{ background: p.bg, position: 'relative', overflow: 'hidden' }}>
                   {p.image
-                    ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+                    ? <Image src={p.image} alt={p.name} width={800} height={533} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : <span className="product-emoji">{p.emoji}</span>}
                 </div>
                 <div className="product-card-body">
@@ -155,7 +156,7 @@ export default function MicrogreensGrid({ label, title, subtitle }) {
 
             <div className="mg-popup-top" style={{ background: selected.bg, overflow: 'hidden', padding: selected.image ? 0 : undefined }}>
               {selected.image
-                ? <img src={selected.image} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <Image src={selected.image} alt={selected.name} width={800} height={533} style={{ width: '100%', height: 'auto', objectFit: 'cover' }} />
                 : <span className="mg-popup-emoji">{selected.emoji}</span>}
               <div className={`product-tag ${selected.tagClass || ''}`} style={{ margin: '12px auto 0' }}>{selected.tag}</div>
             </div>
