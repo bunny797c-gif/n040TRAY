@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getAdminUser } from '@/lib/admin';
 
 export async function GET() {
   const { isAdmin } = await getAdminUser();
   if (!isAdmin) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('orders')
     .select('*')
