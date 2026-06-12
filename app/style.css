@@ -682,8 +682,10 @@ body {
 .hamburger.is-open span:nth-child(2) { opacity: 0; }
 .hamburger.is-open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
 
-/* ── Push content below fixed header ── */
-body > .hero-bg {
+/* ── Push content below fixed header ──
+   Matched loosely (not body >) because route wrappers like .page-transition
+   can sit between body and the hero. */
+.hero-bg {
     padding-top: 90px;
 }
 
@@ -3213,3 +3215,7 @@ h1:not(.hero-title):not(.brand-name),
     .hero-stats { margin: 0 auto; max-width: 460px; }
     .hero-stat { text-align: left; }
 }
+
+/* Contain overscaled parallax images */
+.banner-section { overflow: hidden; }
+.why-micro-center { overflow: visible; }

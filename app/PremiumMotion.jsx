@@ -60,6 +60,8 @@ export default function PremiumMotion() {
     /* ── 3. Parallax layers ── */
     const px = (sel, y) => {
       document.querySelectorAll(sel).forEach((el) => {
+        // Overscale so the shifting image never exposes its container's background
+        gsap.set(el, { scale: 1 + Math.abs(y) / 100 * 2, transformOrigin: 'center' });
         gsap.to(el, {
           yPercent: y,
           ease: 'none',
