@@ -75,8 +75,8 @@ export default function PlansSelector({ plans }) {
                 <div className="sub-plan-divider"></div>
                 <ul className="sub-plan-perks">
                   <li><span className="check">✓</span> {p.deliveries} fresh deliveries</li>
-                  <li><span className="check">✓</span> {p.serving_label}</li>
-                  <li><span className="check">✓</span> {p.varieties_label}</li>
+                  <li><span className="check">✓</span> {p.audience === 'single' ? '4 varieties · 25g each' : p.audience === 'couple' ? '4 varieties · 50g each' : '4 varieties · 100g each'}</li>
+                  <li><span className="check">✓</span> Curated weekly mix</li>
                   <li><span className="check">✓</span> Free home delivery</li>
                   <li><span className="check">✓</span> Skip or pause anytime (Mon–Fri)</li>
                 </ul>
