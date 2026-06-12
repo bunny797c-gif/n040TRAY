@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HomeScripts from './HomeScripts';
 import MicrogreensGrid from './MicrogreensGrid';
+import { WhyChooseUs, OurStandards, HowItWorks, WhoWeServe } from './HomeSections';
 import { getSiteContent, t } from '@/lib/content';
 
 export const revalidate = 0;
@@ -18,8 +19,6 @@ function lines(text) {
 
 export default async function HomePage() {
   const c = await getSiteContent();
-  const imgMax = Number(t(c, 'layout.image_max_width', 1100)) || 1100;
-  const imgStyle = { maxWidth: imgMax };
   return (
     <>
       <Header />
@@ -81,13 +80,7 @@ export default async function HomePage() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="why-section">
-        <div className="why-inner">
-          <div className="why-image">
-            <Image src={t(c, 'why_choose_us.image', '/images/why-choose-us.jpg')} alt="Why Our Microgreens — grown fresh and harvested within 24 hours, 100% chemical free, delivered farm to door, up to 40x more nutrients" width={1400} height={1120} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
-          </div>
-        </div>
-      </section>
+      <WhyChooseUs />
 
       {/* Products */}
       <MicrogreensGrid
@@ -97,13 +90,7 @@ export default async function HomePage() {
       />
 
       {/* Our Standards */}
-      <section className="process-section">
-        <div className="process-inner">
-          <div className="process-image">
-            <Image src={t(c, 'our_standards.image', '/images/our-standards.jpg')} alt="Our Standards — What You Get: quality-checked seeds, clean soil-free growing, purified water, controlled conditions, hand-harvested at peak nutrition, delivered fresh" width={1400} height={934} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
-          </div>
-        </div>
-      </section>
+      <OurStandards />
 
       {/* Nutrition */}
       <section className="nutrition-section">
@@ -141,22 +128,10 @@ export default async function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="howitworks-section">
-        <div className="process-inner">
-          <div className="process-image">
-            <Image src={t(c, 'how_it_works.image', '/images/how-it-works.jpg')} alt="How It Works — choose your plan, we grow and harvest the morning of delivery, delivered fresh within hours, pause or modify anytime with 48 hours' notice" width={1400} height={1120} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
-          </div>
-        </div>
-      </section>
+      <HowItWorks />
 
       {/* Who We Serve */}
-      <section className="audience-section">
-        <div className="audience-inner">
-          <div className="audience-image">
-            <Image src={t(c, 'who_we_serve.image', '/images/who-we-serve.jpg')} alt="Who We Serve — health-conscious individuals, fitness enthusiasts, families, working professionals, restaurants and cafes, wellness practitioners" width={1400} height={1120} style={{ width: '100%', maxWidth: imgMax, height: 'auto' }} />
-          </div>
-        </div>
-      </section>
+      <WhoWeServe />
 
       {/* Testimonials */}
       <section className="testimonials-section">

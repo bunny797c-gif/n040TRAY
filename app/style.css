@@ -1,3 +1,35 @@
+/* ── Design Tokens ── */
+:root {
+    /* Brand palette — Organic Biophilic */
+    --primary: #4a7c59;
+    --primary-light: #7ab55c;
+    --primary-dark: #3a6347;
+    --ink: #1a2e1a;
+    --ink-soft: #41523f;
+    --accent: #c8d4a6;
+    --accent-soft: #e8f0dc;
+    --cream: #faf8f2;
+    --surface: #ffffff;
+    --text: #333;
+    --text-muted: #5f6d5c;
+
+    /* Typography */
+    --font-heading-stack: var(--font-heading), Georgia, 'Times New Roman', serif;
+    --font-body-stack: var(--font-body), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    /* Shape & depth */
+    --radius-sm: 12px;
+    --radius: 20px;
+    --radius-lg: 28px;
+    --shadow-soft: 0 4px 20px rgba(26, 46, 26, 0.06);
+    --shadow-lift: 0 16px 40px rgba(26, 46, 26, 0.12);
+    --shadow-card: 0 2px 8px rgba(26, 46, 26, 0.05), 0 12px 32px rgba(26, 46, 26, 0.07);
+
+    /* Motion */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --speed: 0.3s;
+}
+
 /* ── Reset ── */
 *, *::before, *::after {
     margin: 0;
@@ -12,7 +44,7 @@ html {
 
 /* ── Base ── */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--font-body-stack);
     color: #333;
     overflow-x: hidden;
     background-color: #f5f5f5;
@@ -2557,4 +2589,438 @@ a.btn-primary, a.btn-secondary, a.btn-cta-secondary {
     .mg-popup-actions { flex-direction: column; }
     .mg-popup-name { font-size: 22px; }
     .mg-popup-emoji { font-size: 56px; }
+}
+
+/* ════════════════════════════════════════════
+   PREMIUM UPGRADE — Organic Biophilic system
+   ════════════════════════════════════════════ */
+
+/* ── Typography upgrade ── */
+.hero-title,
+.section-title,
+.why-micro-title,
+.cta-title,
+.why-title {
+    font-family: var(--font-heading-stack);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+}
+
+.hero-title { line-height: 1.12; }
+
+.ns-highlight {
+    font-style: italic;
+    color: var(--primary-light);
+}
+
+/* ── Shared section scaffolding ── */
+.ns-section {
+    padding: clamp(60px, 8vw, 110px) clamp(20px, 5vw, 60px);
+    position: relative;
+    overflow: hidden;
+}
+
+.ns-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.ns-header {
+    text-align: center;
+    max-width: 680px;
+    margin: 0 auto clamp(36px, 5vw, 64px);
+}
+
+.ns-header .section-subtitle {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Organic blob accents */
+.ns-section::before,
+.ns-section::after {
+    content: '';
+    position: absolute;
+    border-radius: 42% 58% 61% 39% / 45% 51% 49% 55%;
+    background: radial-gradient(circle at 35% 35%, rgba(122, 181, 92, 0.10), rgba(122, 181, 92, 0.03));
+    pointer-events: none;
+    z-index: 0;
+}
+.ns-section::before {
+    width: clamp(220px, 30vw, 460px);
+    height: clamp(220px, 30vw, 460px);
+    top: -8%;
+    left: -10%;
+}
+.ns-section::after {
+    width: clamp(180px, 24vw, 380px);
+    height: clamp(180px, 24vw, 380px);
+    bottom: -10%;
+    right: -8%;
+    border-radius: 58% 42% 39% 61% / 51% 45% 55% 49%;
+}
+
+/* ── Cards ── */
+.ns-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: clamp(26px, 3vw, 36px) clamp(20px, 2.5vw, 30px);
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(200, 212, 166, 0.35);
+    position: relative;
+    transition: transform var(--speed) var(--ease-out), box-shadow var(--speed) var(--ease-out);
+}
+
+.ns-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lift);
+}
+
+.ns-card h3 {
+    font-size: clamp(17px, 1.8vw, 20px);
+    font-weight: 700;
+    color: var(--ink);
+    margin: 16px 0 10px;
+}
+
+.ns-card p {
+    font-size: clamp(13.5px, 1.3vw, 15px);
+    color: var(--text-muted);
+    line-height: 1.65;
+}
+
+.ns-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    background: var(--accent-soft);
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--speed) var(--ease-out), background var(--speed) ease, color var(--speed) ease;
+}
+
+.ns-icon svg { width: 28px; height: 28px; }
+
+.ns-icon--lg { width: 64px; height: 64px; border-radius: 20px; }
+.ns-icon--lg svg { width: 32px; height: 32px; }
+
+.ns-card:hover .ns-icon,
+.ns-step:hover .ns-icon,
+.ns-how-step:hover .ns-icon {
+    background: var(--primary);
+    color: #fff;
+    transform: scale(1.08) rotate(-4deg);
+}
+
+/* ── Why Choose Us ── */
+.ns-why { background: var(--cream); }
+
+.ns-why-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+    gap: clamp(16px, 2.5vw, 28px);
+}
+
+.ns-badge-40x {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    background: var(--primary-light);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    border-radius: 999px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+    box-shadow: 0 6px 16px rgba(122, 181, 92, 0.4);
+    animation: ns-float 3.5s ease-in-out infinite;
+}
+.ns-badge-40x small { font-size: 8px; font-weight: 700; letter-spacing: 1px; }
+
+@keyframes ns-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+/* ── Pill strip ── */
+.ns-strip {
+    margin: clamp(32px, 4vw, 48px) auto 0;
+    width: fit-content;
+    max-width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px 18px;
+    background: var(--surface);
+    border: 1px solid rgba(200, 212, 166, 0.5);
+    border-radius: 999px;
+    padding: 14px 28px;
+    font-size: clamp(13px, 1.3vw, 15px);
+    font-weight: 700;
+    color: var(--primary-dark);
+    box-shadow: var(--shadow-soft);
+}
+
+.ns-strip-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--accent);
+}
+
+/* ── Our Standards ── */
+.ns-standards { background: #f6f4ec; }
+
+.ns-steps-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 32px);
+}
+
+.ns-step {
+    position: relative;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: clamp(26px, 3vw, 34px) clamp(20px, 2.5vw, 28px);
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(200, 212, 166, 0.35);
+    transition: transform var(--speed) var(--ease-out), box-shadow var(--speed) var(--ease-out);
+}
+
+.ns-step:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lift);
+}
+
+.ns-step-num {
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    font-family: var(--font-heading-stack);
+    font-size: clamp(28px, 3vw, 36px);
+    font-weight: 700;
+    color: rgba(122, 181, 92, 0.22);
+    line-height: 1;
+}
+
+.ns-step h3 {
+    font-size: clamp(16px, 1.7vw, 19px);
+    font-weight: 700;
+    color: var(--ink);
+    margin: 16px 0 8px;
+}
+
+.ns-step p {
+    font-size: clamp(13.5px, 1.3vw, 14.5px);
+    color: var(--text-muted);
+    line-height: 1.65;
+}
+
+.ns-assurance {
+    margin-top: clamp(32px, 4vw, 52px);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid rgba(200, 212, 166, 0.5);
+    border-radius: var(--radius);
+    padding: clamp(20px, 2.5vw, 28px);
+    box-shadow: var(--shadow-soft);
+}
+
+.ns-assurance-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.ns-assurance-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--accent-soft);
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.ns-assurance-icon svg { width: 20px; height: 20px; }
+
+.ns-assurance-item strong {
+    display: block;
+    font-size: 14px;
+    color: var(--ink);
+    margin-bottom: 2px;
+}
+
+.ns-assurance-item span:not(.ns-assurance-icon) {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* ── How It Works ── */
+.ns-how { background: var(--cream); }
+
+.ns-how-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+    gap: clamp(28px, 4vw, 40px) clamp(20px, 3vw, 32px);
+    text-align: center;
+}
+
+.ns-how-step { position: relative; }
+
+/* dashed connector between steps on wide screens */
+@media (min-width: 992px) {
+    .ns-how-step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 56px;
+        left: calc(50% + 70px);
+        width: calc(100% - 140px);
+        border-top: 2px dashed rgba(122, 181, 92, 0.45);
+    }
+}
+
+.ns-how-circle {
+    position: relative;
+    width: 112px;
+    height: 112px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--speed) var(--ease-out), box-shadow var(--speed) var(--ease-out);
+}
+
+.ns-how-step:hover .ns-how-circle {
+    transform: scale(1.06);
+    box-shadow: 0 12px 32px rgba(122, 181, 92, 0.3);
+}
+
+.ns-how-circle .ns-icon {
+    background: transparent;
+    color: var(--primary);
+}
+.ns-how-step:hover .ns-how-circle .ns-icon {
+    background: transparent;
+    color: var(--primary-dark);
+    transform: none;
+}
+
+.ns-how-num {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--cream);
+}
+
+.ns-how-step h3 {
+    font-size: clamp(16px, 1.7vw, 19px);
+    font-weight: 700;
+    color: var(--ink);
+    margin: 18px 0 8px;
+}
+
+.ns-how-step p {
+    font-size: clamp(13.5px, 1.3vw, 14.5px);
+    color: var(--text-muted);
+    line-height: 1.65;
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+/* ── Who We Serve ── */
+.ns-serve { background: #f6f4ec; }
+
+.ns-serve-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: clamp(16px, 2.5vw, 28px);
+}
+
+/* ── Scroll reveal ── */
+[data-reveal] {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+    transition-delay: var(--reveal-delay, 0s);
+    will-change: opacity, transform;
+}
+
+[data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+}
+
+/* No-JS / pre-hydration safety: only hide when JS confirms */
+html:not(.js-reveal) [data-reveal] {
+    opacity: 1;
+    transform: none;
+}
+
+/* ── Premium polish for existing components ── */
+.testimonial-card,
+.product-card {
+    transition: transform var(--speed) var(--ease-out), box-shadow var(--speed) var(--ease-out);
+}
+
+.testimonial-card:hover,
+.product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lift);
+}
+
+.product-card-top img {
+    transition: transform 0.5s var(--ease-out);
+}
+
+.product-card:hover .product-card-top img {
+    transform: scale(1.05);
+}
+
+.faq-item {
+    transition: box-shadow var(--speed) ease;
+}
+
+.faq-item[open] {
+    box-shadow: var(--shadow-soft);
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+    [data-reveal] {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    .ns-badge-40x { animation: none; }
+    .ns-card, .ns-step, .ns-how-circle, .testimonial-card, .product-card, .ns-icon {
+        transition: none !important;
+    }
 }
