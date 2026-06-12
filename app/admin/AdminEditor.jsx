@@ -458,15 +458,72 @@ function SubscribersTab({ subscriptions }) {
 }
 
 // ── Orders Tab ────────────────────────────────────────────────────────────
-function OrdersTab({ orders }) {
+function OrdersTab({ orders: initialOrders }) {
+  const [orders, setOrders] = useState(initialOrders);
   const [filter, setFilter] = useState('all');
+  const [msg, setMsg] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const filtered = useMemo(() => filter === 'all' ? orders : orders.filter((o) => o.status === filter), [orders, filter]);
   const totalPaid = orders.filter((o) => o.status === 'paid').reduce((s, o) => s + Number(o.amount_inr || 0), 0);
 
+  async function cancelOrder(o) {
+    const prev = o.status;
+    setOrders((all) => all.map((x) => x.id === o.id ? { ...x, status: 'cancelled' } : x));
+    const res = await fetch('/api/admin/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: o.id, status: 'cancelled' }),
+    });
+    if (!res.ok) {
+      setOrders((all) => all.map((x) => x.id === o.id ? { ...x, status: prev } : x));
+      setMsg({ type: 'error', text: 'Failed to cancel order.' });
+    } else {
+      setMsg({ type: 'ok', text: `Order cancelled.` });
+    }
+    setTimeout(() => setMsg(null), 3000);
+  }
+
+  async function deleteOrder(id) {
+    setOrders((all) => all.filter((x) => x.id !== id));
+    setConfirmDelete(null);
+    const res = await fetch('/api/admin/orders', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) {
+      setMsg({ type: 'error', text: 'Failed to delete order.' });
+    } else {
+      setMsg({ type: 'ok', text: 'Order deleted.' });
+    }
+    setTimeout(() => setMsg(null), 3000);
+  }
+
   return (
     <div>
+      {msg && (
+        <div style={{ marginBottom: 14, padding: '10px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, background: msg.type === 'ok' ? '#eef5e6' : '#fdecea', color: msg.type === 'ok' ? '#3d6b3d' : '#b0281e' }}>
+          {msg.type === 'ok' ? '✅' : '⚠'} {msg.text}
+        </div>
+      )}
+
+      {/* Confirm delete dialog */}
+      {confirmDelete && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 14, padding: '28px 32px', maxWidth: 360, width: '90%', textAlign: 'center', boxShadow: '0 8px 40px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🗑️</div>
+            <h3 style={{ margin: '0 0 8px', fontSize: 17, color: '#222' }}>Delete this order?</h3>
+            <p style={{ margin: '0 0 22px', fontSize: 13, color: '#777' }}>This will permanently remove the order record. This cannot be undone.</p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button onClick={() => setConfirmDelete(null)} style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid #ddd', background: '#f5f5f0', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#555' }}>Cancel</button>
+              <button onClick={() => deleteOrder(confirmDelete)} style={{ padding: '10px 22px', borderRadius: 8, border: 'none', background: '#c0392b', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: '#fff' }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
-        {['all','paid','created','failed'].map((s) => (
+        {['all','paid','created','failed','cancelled'].map((s) => (
           <button key={s} onClick={() => setFilter(s)} style={{ padding: '8px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: filter === s ? '#4a7c59' : '#f0f0ea', color: filter === s ? '#fff' : '#555' }}>
             {s === 'all' ? 'All' : s}
           </button>
@@ -479,14 +536,14 @@ function OrdersTab({ orders }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: '#f9f9f6' }}>
-              {['Date','Amount','Status','Razorpay Order ID','Razorpay Payment ID','Paid At'].map((h) => (
+              {['Date','Amount','Status','Razorpay Order ID','Razorpay Payment ID','Paid At','Actions'].map((h) => (
                 <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.4, borderBottom: '1px solid #eee', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: '#bbb', fontSize: 14 }}>No orders.</td></tr>
+              <tr><td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: '#bbb', fontSize: 14 }}>No orders.</td></tr>
             ) : filtered.map((o, i) => (
               <tr key={o.id} style={{ background: i % 2 === 0 ? '#fff' : '#fafaf7' }}>
                 <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#666' }}>{fmtDate(o.created_at)}</td>
@@ -495,6 +552,24 @@ function OrdersTab({ orders }) {
                 <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontSize: 11, color: '#888' }}>{o.razorpay_order_id || '—'}</td>
                 <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontSize: 11, color: '#888' }}>{o.razorpay_payment_id || '—'}</td>
                 <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#888' }}>{o.paid_at ? fmtDate(o.paid_at) : '—'}</td>
+                <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {o.status !== 'cancelled' && o.status !== 'paid' && (
+                      <button
+                        onClick={() => cancelOrder(o)}
+                        style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #e07b39', background: '#fff8f3', color: '#e07b39', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setConfirmDelete(o.id)}
+                      style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #e0392b', background: '#fff5f5', color: '#c0392b', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
