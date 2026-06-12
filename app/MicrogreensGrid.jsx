@@ -151,7 +151,7 @@ export default function MicrogreensGrid({ label, title, subtitle }) {
       {/* Popup */}
       {selected && (
         <div className="mg-overlay" onClick={() => setSelected(null)}>
-          <div className="mg-popup" onClick={(e) => e.stopPropagation()}>
+          <div className="mg-popup" onClick={(e) => e.stopPropagation()} data-lenis-prevent>
             <button className="mg-close" onClick={() => setSelected(null)} aria-label="Close">✕</button>
 
             <div className="mg-popup-top" style={{ background: selected.bg, overflow: 'hidden', padding: selected.image ? 0 : undefined }}>
