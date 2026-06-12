@@ -931,6 +931,8 @@ function VarietiesTab() {
   const [addBusy, setAddBusy] = useState(false);
   const [newV, setNewV] = useState({ name: '', family: '', taste: '', description: '', price_100g: 249, price_200g: 449, price_500g: 999 });
   const [editingPrices, setEditingPrices] = useState({}); // { id: { price_100g, price_200g, price_500g } }
+  const [editingFields, setEditingFields] = useState({}); // { id: { name, family, taste, ... } }
+  const [savingFields, setSavingFields] = useState(null);
 
   useEffect(() => {
     fetch('/api/admin/microgreens')
@@ -1028,6 +1030,27 @@ function VarietiesTab() {
       setEditingPrices((prev) => { const n = { ...prev }; delete n[v.id]; return n; });
       setMsg({ type: 'ok', text: `Prices updated for ${v.name}.` });
     }
+  }
+
+  async function saveFields(v) {
+    const ef = editingFields[v.id];
+    if (!ef) return;
+    setSavingFields(v.id);
+    const ok = await patch(v.id, ef);
+    setSavingFields(null);
+    if (ok) {
+      setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, ...ef } : x));
+      setEditingFields((prev) => { const n = { ...prev }; delete n[v.id]; return n; });
+      setMsg({ type: 'ok', text: `${ef.name || v.name} updated.` });
+    }
+  }
+
+  function startEditing(v) {
+    setEditingFields((prev) => ({
+      ...prev,
+      [v.id]: { name: v.name || '', family: v.family || '', taste: v.taste || '', description: v.description || '', benefits: v.benefits || '', grow_time: v.grow_time || '', daily_intake: v.daily_intake || '', tag: v.tag || '' },
+    }));
+    setExpandedId(v.id);
   }
 
   if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#aaa', fontSize: 14 }}>Loading varieties…</div>;
@@ -1140,8 +1163,10 @@ function VarietiesTab() {
           const fc = FAMILY_COLORS[v.family] || { bg: '#f0f0f0', color: '#555' };
           const isExpanded = expandedId === v.id;
           const isUploading = uploading === v.id;
+          const ef = editingFields[v.id];
+          const isEditing = Boolean(ef);
           return (
-            <div key={v.id} style={{ background: '#fff', borderRadius: 16, border: `2px solid ${v.out_of_stock ? '#f5c6a0' : v.show_on_home ? '#7ab55c' : '#eee'}`, overflow: 'hidden', boxShadow: v.show_on_home ? '0 2px 12px rgba(74,124,89,0.12)' : '0 1px 4px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}>
+            <div key={v.id} style={{ background: '#fff', borderRadius: 16, border: `2px solid ${isEditing ? '#4a7c59' : v.out_of_stock ? '#f5c6a0' : v.show_on_home ? '#7ab55c' : '#eee'}`, overflow: 'hidden', boxShadow: v.show_on_home ? '0 2px 12px rgba(74,124,89,0.12)' : '0 1px 4px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}>
 
               {/* Image area */}
               <div style={{ height: 140, background: '#f7fbf3', position: 'relative', overflow: 'hidden' }}>
@@ -1174,16 +1199,44 @@ function VarietiesTab() {
               {/* Card body */}
               <div style={{ padding: '14px 16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1a2e1a' }}>{v.name}</h3>
-                    <span style={{ display: 'inline-block', marginTop: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: fc.bg, color: fc.color }}>{v.family}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {isEditing
+                      ? <input value={ef.name} onChange={(e) => setEditingFields((p) => ({ ...p, [v.id]: { ...p[v.id], name: e.target.value } }))} style={{ ...inputStyle, fontSize: 15, fontWeight: 800, width: '100%', marginBottom: 6 }} />
+                      : <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1a2e1a' }}>{v.name}</h3>
+                    }
+                    {isEditing
+                      ? <input value={ef.family} onChange={(e) => setEditingFields((p) => ({ ...p, [v.id]: { ...p[v.id], family: e.target.value } }))} placeholder="Family" style={{ ...inputStyle, fontSize: 11, padding: '3px 8px', width: '100%' }} />
+                      : <span style={{ display: 'inline-block', marginTop: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: fc.bg, color: fc.color }}>{v.family}</span>
+                    }
                   </div>
-                  {v.tag && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, background: v.tag_class?.includes('spicy') ? '#fdecea' : v.tag_class?.includes('mild') ? '#e0f0e8' : '#eef5e6', color: v.tag_class?.includes('spicy') ? '#b0281e' : v.tag_class?.includes('mild') ? '#1e5e44' : '#3d6b2e', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 8 }}>{v.tag}</span>
-                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginLeft: 8, flexShrink: 0 }}>
+                    {isEditing
+                      ? <>
+                          <button onClick={() => saveFields(v)} disabled={savingFields === v.id} style={{ padding: '4px 10px', borderRadius: 6, border: 'none', background: '#4a7c59', color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
+                            {savingFields === v.id ? '…' : 'Save'}
+                          </button>
+                          <button onClick={() => setEditingFields((p) => { const n = { ...p }; delete n[v.id]; return n; })} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #ddd', background: '#f5f5f0', color: '#666', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                            Cancel
+                          </button>
+                        </>
+                      : <button onClick={() => startEditing(v)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #d0e4c8', background: '#f7fbf3', color: '#4a7c59', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
+                          ✏️ Edit
+                        </button>
+                    }
+                  </div>
                 </div>
 
-                <p style={{ margin: '0 0 10px', fontSize: 12, color: '#666', fontStyle: 'italic' }}>✦ {v.taste}</p>
+                {isEditing
+                  ? <>
+                      <input value={ef.taste} onChange={(e) => setEditingFields((p) => ({ ...p, [v.id]: { ...p[v.id], taste: e.target.value } }))} placeholder="Taste / flavour notes" style={{ ...inputStyle, width: '100%', fontSize: 12, marginBottom: 6 }} />
+                      <input value={ef.tag} onChange={(e) => setEditingFields((p) => ({ ...p, [v.id]: { ...p[v.id], tag: e.target.value } }))} placeholder="Tag (e.g. SPICY, MILD)" style={{ ...inputStyle, width: '100%', fontSize: 12, marginBottom: 6 }} />
+                      <input value={ef.grow_time} onChange={(e) => setEditingFields((p) => ({ ...p, [v.id]: { ...p[v.id], grow_time: e.target.value } }))} placeholder="Grow time (e.g. 7–10 days)" style={{ ...inputStyle, width: '100%', fontSize: 12, marginBottom: 6 }} />
+                      <input value={ef.daily_intake} onChange={(e) => setEditingFields((p) => ({ ...p, [v.id]: { ...p[v.id], daily_intake: e.target.value } }))} placeholder="Daily intake (e.g. 20–30g)" style={{ ...inputStyle, width: '100%', fontSize: 12, marginBottom: 6 }} />
+                      <textarea value={ef.description} onChange={(e) => setEditingFields((p) => ({ ...p, [v.id]: { ...p[v.id], description: e.target.value } }))} placeholder="Description" rows={2} style={{ ...inputStyle, width: '100%', fontSize: 12, marginBottom: 6, resize: 'vertical' }} />
+                      <textarea value={ef.benefits} onChange={(e) => setEditingFields((p) => ({ ...p, [v.id]: { ...p[v.id], benefits: e.target.value } }))} placeholder="Benefits" rows={2} style={{ ...inputStyle, width: '100%', fontSize: 12, resize: 'vertical' }} />
+                    </>
+                  : <p style={{ margin: '0 0 10px', fontSize: 12, color: '#666', fontStyle: 'italic' }}>✦ {v.taste}</p>
+                }
 
                 {/* Toggles */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10, background: '#f9f9f6', borderRadius: 10, padding: '10px 12px' }}>
