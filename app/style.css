@@ -2598,19 +2598,21 @@ a.btn-primary, a.btn-secondary, a.btn-cta-secondary {
     margin-top: 24px;
 }
 
-.mg-subscribe-btn {
+.mg-subscribe-btn,
+a.mg-subscribe-btn {
     flex: 1;
     text-align: center;
     text-decoration: none;
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 47px;
-    padding: 0 16px;
+    height: 47px !important;
+    min-height: 47px;
+    padding: 13px 16px !important;
     font-size: 13px;
     border-radius: 8px;
-    box-shadow: none;
+    box-shadow: none !important;
 }
 
 .mg-cart-btn {
