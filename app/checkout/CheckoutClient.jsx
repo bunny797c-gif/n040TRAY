@@ -350,14 +350,7 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
           <div><strong style={{ fontSize: 18, color: '#4a7c59' }}>{inr(plan.price_inr)}</strong></div>
         </div>
 
-        {varietySummary() && (
-          <div className="row">
-            <div>
-              <strong>Variety preference</strong>
-              <small>{varietySummary()}</small>
-            </div>
-          </div>
-        )}
+
         <div style={{ marginTop: 16, fontSize: 12, color: '#888', lineHeight: 1.6 }}>
           ✓ Sunday delivery · ✓ Skip with 2 days' notice · ✓ Secure payment by Razorpay
         </div>
