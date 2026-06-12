@@ -102,10 +102,37 @@ const MICROGREENS = [
   },
 ];
 
-export default function MicrogreensGrid({ label, title, subtitle }) {
+// Map an admin catalog row to the card shape used below
+function fromCatalog(v) {
+  return {
+    emoji: '🌿',
+    image: v.image_url || null,
+    bg: 'linear-gradient(135deg, #e8f5e0, #c8e6b0)',
+    tag: v.tag || 'MICROGREEN',
+    tagClass: v.tag_class || '',
+    name: v.name,
+    taste: v.taste || '',
+    desc: v.description || '',
+    uses: v.uses || [],
+    nutrients: v.nutrients || [],
+    benefits: v.benefits || '',
+    growTime: v.grow_time || '—',
+    servingSize: v.serving_size || '60g tray',
+    dailyIntake: v.daily_intake || '—',
+    // cart fields — price the 100g pack like the shop page
+    cartKey: `${v.name}__100g`,
+    packLabel: '100g',
+    price: Number(v.price_100g) || 249,
+  };
+}
+
+export default function MicrogreensGrid({ label, title, subtitle, varieties = [] }) {
   const [selected, setSelected] = useState(null);
   const [addedName, setAddedName] = useState(null);
   const { addItem } = useCart();
+
+  // Admin-selected homepage varieties; fall back to the built-in six
+  const items = varieties.length > 0 ? varieties.map(fromCatalog) : MICROGREENS;
 
   function handleAddToCart(item) {
     addItem(item);
@@ -121,7 +148,7 @@ export default function MicrogreensGrid({ label, title, subtitle }) {
           <h2 className="section-title">{title}</h2>
           <p className="section-subtitle">{subtitle}</p>
           <div className="products-grid">
-            {MICROGREENS.map((p) => (
+            {items.map((p) => (
               <div
                 className="product-card"
                 key={p.name}

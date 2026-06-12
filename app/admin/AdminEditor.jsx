@@ -1000,6 +1000,14 @@ function VarietiesTab() {
     else setMsg({ type: 'ok', text: `${v.name} ${next ? 'added to catalog ✅' : 'removed from catalog'}.` });
   }
 
+  async function toggleFeatured(v) {
+    const next = !v.featured_home;
+    setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, featured_home: next } : x));
+    const ok = await patch(v.id, { featured_home: next });
+    if (!ok) setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, featured_home: v.featured_home } : x));
+    else setMsg({ type: 'ok', text: `${v.name} ${next ? 'now showing on the homepage ✅' : 'removed from the homepage'}.` });
+  }
+
   async function toggleOos(v) {
     const next = !v.out_of_stock;
     setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, out_of_stock: next } : x));
@@ -1087,6 +1095,9 @@ function VarietiesTab() {
         </div>
         <div style={{ background: '#fdecea', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 700, color: '#b0281e' }}>
           ✗ {varieties.filter((v) => v.out_of_stock).length} out of stock
+        </div>
+        <div style={{ background: '#e8edf5', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 700, color: '#3a5080' }}>
+          🏠 {varieties.filter((v) => v.featured_home).length} on homepage
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -1208,6 +1219,11 @@ function VarietiesTab() {
                       ✅ IN CATALOG
                     </div>
                   )}
+                  {v.featured_home && (
+                    <div style={{ background: '#5c7aaa', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 10, letterSpacing: 0.3 }}>
+                      🏠 ON HOMEPAGE
+                    </div>
+                  )}
                   {v.out_of_stock && (
                     <div style={{ background: '#e07b39', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 10, letterSpacing: 0.3 }}>
                       ✗ OUT OF STOCK
@@ -1267,6 +1283,15 @@ function VarietiesTab() {
                       style={{ width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: v.show_on_home ? '#7ab55c' : '#ddd', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
                     >
                       <span style={{ position: 'absolute', top: 3, left: v.show_on_home ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#444' }}>Show on homepage</span>
+                    <button
+                      onClick={() => toggleFeatured(v)}
+                      style={{ width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: v.featured_home ? '#5c7aaa' : '#ddd', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+                    >
+                      <span style={{ position: 'absolute', top: 3, left: v.featured_home ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
                     </button>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

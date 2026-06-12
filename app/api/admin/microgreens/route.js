@@ -54,7 +54,7 @@ export async function PATCH(req) {
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
   const allowed = [
-    'image_url', 'show_on_home', 'home_order', 'out_of_stock',
+    'image_url', 'show_on_home', 'home_order', 'out_of_stock', 'featured_home',
     'name', 'family', 'taste', 'description', 'benefits',
     'grow_time', 'daily_intake', 'tag', 'tag_class',
     'price_100g', 'price_200g', 'price_500g',
