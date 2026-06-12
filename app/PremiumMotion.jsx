@@ -105,6 +105,46 @@ export default function PremiumMotion() {
       );
     }
 
+    /* ── 5b. Vine dividers draw themselves on scroll ── */
+    document.querySelectorAll('.vine-divider').forEach((divider) => {
+      const path = divider.querySelector('.vine-path');
+      if (!path) return;
+      const len = path.getTotalLength();
+      gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
+      gsap.to(path, {
+        strokeDashoffset: 0,
+        ease: 'none',
+        scrollTrigger: { trigger: divider, start: 'top 92%', end: 'top 45%', scrub: 0.5 },
+      });
+      gsap.fromTo(divider.querySelectorAll('.vine-leaf-d'),
+        { scale: 0, opacity: 0, transformOrigin: 'center' },
+        {
+          scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2)', stagger: 0.15,
+          scrollTrigger: { trigger: divider, start: 'top 70%', once: true },
+        }
+      );
+    });
+
+    /* ── 5c. Pinned storytelling: How It Works steps spotlight in sequence ── */
+    if (window.matchMedia('(min-width: 992px)').matches) {
+      const steps = gsap.utils.toArray('.ns-how-step');
+      if (steps.length) {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: '.ns-how',
+            start: 'top top',
+            end: '+=130%',
+            pin: true,
+            scrub: 0.4,
+          },
+        });
+        steps.forEach((step, i) => {
+          tl.to(step, { '--step-glow': 1, scale: 1.05, duration: 0.6, ease: 'power2.out' }, i)
+            .to(step, { scale: 1, duration: 0.5, ease: 'power2.in' }, i + 0.7);
+        });
+      }
+    }
+
     /* ── 6. Magnetic CTAs (fine pointers only) ── */
     if (window.matchMedia('(pointer: fine)').matches) {
       document.querySelectorAll('.btn-primary').forEach((btn) => {
@@ -119,6 +159,28 @@ export default function PremiumMotion() {
         btn.addEventListener('mousemove', onMove);
         btn.addEventListener('mouseleave', onLeave);
         cleanups.push(() => { btn.removeEventListener('mousemove', onMove); btn.removeEventListener('mouseleave', onLeave); });
+      });
+    }
+
+    /* ── 6b. 3D tilt on product cards (fine pointers only) ── */
+    if (window.matchMedia('(pointer: fine)').matches) {
+      document.querySelectorAll('.product-card').forEach((card) => {
+        const onMove = (e) => {
+          const r = card.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width - 0.5;
+          const y = (e.clientY - r.top) / r.height - 0.5;
+          gsap.to(card, {
+            rotateY: x * 7,
+            rotateX: -y * 7,
+            transformPerspective: 900,
+            duration: 0.4,
+            ease: 'power2.out',
+          });
+        };
+        const onLeave = () => gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.6, ease: 'power3.out' });
+        card.addEventListener('mousemove', onMove);
+        card.addEventListener('mouseleave', onLeave);
+        cleanups.push(() => { card.removeEventListener('mousemove', onMove); card.removeEventListener('mouseleave', onLeave); });
       });
     }
 

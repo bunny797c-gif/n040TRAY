@@ -3085,3 +3085,131 @@ html:not(.js-reveal) [data-reveal] {
     .nutrition-section::before,
     .cta-section::before { animation: none; }
 }
+
+/* ── Live hero stats (replaces stats.jpg) ── */
+.hero-stats {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 18px;
+    width: 100%;
+    max-width: 420px;
+}
+
+.hero-stat {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 12px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid rgba(200, 212, 166, 0.5);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    box-shadow: var(--shadow-soft);
+    transition: transform var(--speed) var(--ease-out), box-shadow var(--speed) var(--ease-out);
+}
+
+.hero-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
+}
+
+.hero-stat-icon {
+    grid-row: 1 / 3;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.hero-stat-icon svg { width: 22px; height: 22px; }
+
+.hero-stat-value {
+    font-size: clamp(15px, 1.6vw, 18px);
+    font-weight: 800;
+    color: var(--primary-dark);
+    line-height: 1.2;
+}
+
+.hero-stat-label {
+    font-size: clamp(11px, 1.1vw, 12.5px);
+    color: var(--text-muted);
+    line-height: 1.3;
+}
+
+@media (max-width: 480px) {
+    .hero-stats { grid-template-columns: 1fr; max-width: 100%; }
+}
+
+/* ── Vine divider ── */
+.vine-divider {
+    display: flex;
+    justify-content: center;
+    color: var(--primary-light);
+    background: transparent;
+    margin: -10px 0;
+    position: relative;
+    z-index: 2;
+}
+
+.vine-divider svg {
+    width: min(600px, 80vw);
+    height: 60px;
+}
+
+/* ── Pinned How-It-Works spotlight ── */
+.ns-how-step { --step-glow: 0; }
+
+.ns-how-step .ns-how-circle {
+    box-shadow: 0 10px calc(36px * var(--step-glow)) rgba(122, 181, 92, calc(0.45 * var(--step-glow)));
+}
+
+/* GSAP drives transform on these steps — reveal with opacity only so they don't fight */
+.ns-how-step[data-reveal] {
+    transform: none;
+    transition-property: opacity;
+}
+
+/* 3D tilt needs its own stacking context */
+.product-card { transform-style: preserve-3d; }
+
+/* ── Page transitions ── */
+.page-transition {
+    animation: page-enter 0.55s var(--ease-out) both;
+}
+
+/* Opacity-only: a transform here would create a containing block and break
+   position:fixed pinning (GSAP ScrollTrigger) inside the page. */
+@keyframes page-enter {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ── Inner pages: premium typography everywhere ── */
+.auth-title,
+.sub-title,
+.section-heading,
+.checkout-title,
+.account-title,
+h1:not(.hero-title):not(.brand-name),
+.subscription-page h2,
+.checkout-page h2 {
+    font-family: var(--font-heading-stack);
+    letter-spacing: -0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-transition { animation: none; }
+    .hero-stat { transition: none; }
+}
+
+/* Live hero stats render at every breakpoint (old rule hid .badges in favour of stats-tab image) */
+@media (max-width: 991px) {
+    .badges { display: flex; justify-content: center; }
+    .hero-stats { margin: 0 auto; max-width: 460px; }
+    .hero-stat { text-align: left; }
+}

@@ -116,6 +116,42 @@ const Icons = {
   ),
 };
 
+/* ── Hero stats (replaces baked stats.jpg / statsvertical.jpg) ── */
+const HERO_STATS = [
+  { icon: 'sprout', value: '7–14 Days', label: 'Harvest Cycle' },
+  { icon: 'bolt', value: 'Up To 40x', label: 'More Nutrients*' },
+  { icon: 'flask', value: '100%', label: 'Chemical Free' },
+  { icon: 'truck', value: 'Farm Fresh', label: 'Delivered Weekly' },
+];
+
+export function HeroStats() {
+  return (
+    <ul className="hero-stats">
+      {HERO_STATS.map((s) => (
+        <li className="hero-stat" key={s.label}>
+          <span className="hero-stat-icon">{Icons[s.icon]}</span>
+          <strong className="hero-stat-value">{s.value}</strong>
+          <span className="hero-stat-label">{s.label}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/* ── Scroll line-draw vine divider ── */
+export function VineDivider() {
+  return (
+    <div className="vine-divider" aria-hidden="true">
+      <svg viewBox="0 0 600 60" fill="none" preserveAspectRatio="xMidYMid meet">
+        <path className="vine-path" d="M10 30 C 80 10, 140 50, 210 30 S 340 10, 410 30 S 530 50, 590 30" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <path className="vine-leaf-d" d="M150 32 q 8 -14 22 -12 q -2 14 -22 12z" fill="currentColor" stroke="none" />
+        <path className="vine-leaf-d" d="M300 24 q 10 12 24 8 q -4 -14 -24 -8z" fill="currentColor" stroke="none" />
+        <path className="vine-leaf-d" d="M450 32 q 8 -14 22 -12 q -2 14 -22 12z" fill="currentColor" stroke="none" />
+      </svg>
+    </div>
+  );
+}
+
 function SectionHeader({ label, title, highlight, subtitle, light }) {
   return (
     <header className={`ns-header${light ? ' ns-header--light' : ''}`} data-reveal>

@@ -4,7 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HomeScripts from './HomeScripts';
 import MicrogreensGrid from './MicrogreensGrid';
-import { WhyChooseUs, OurStandards, HowItWorks, WhoWeServe } from './HomeSections';
+import { WhyChooseUs, OurStandards, HowItWorks, WhoWeServe, HeroStats, VineDivider } from './HomeSections';
 import PremiumMotion from './PremiumMotion';
 import { getSiteContent, t } from '@/lib/content';
 
@@ -38,15 +38,13 @@ export default async function HomePage() {
               <Link href="#microgreens" className="btn-secondary"><span>{t(c, 'hero.secondary_cta', 'SHOP MICROGREENS')}</span></Link>
             </div>
             <div className="badges">
-              <Image src="/images/stats.jpg" alt="Stats" className="stats-image stats-desktop" width={900} height={450} priority />
-              <Image src="/images/statsvertical.jpg" alt="Stats" className="stats-image stats-vertical" width={450} height={900} priority />
+              <HeroStats />
             </div>
           </div>
           <div className="hero-right">
             <div className="product-image">
               <Image src={t(c, 'hero.image', '/images/img-1.jpg')} alt="Fresh Microgreens" width={798} height={1200} priority style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
             </div>
-            <Image src="/images/statsvertical.jpg" alt="Stats" className="stats-image stats-tab" width={450} height={900} priority />
           </div>
         </section>
       </div>
@@ -82,6 +80,7 @@ export default async function HomePage() {
 
       {/* Why Choose Us */}
       <WhyChooseUs />
+      <VineDivider />
 
       {/* Products */}
       <MicrogreensGrid
@@ -130,6 +129,7 @@ export default async function HomePage() {
 
       {/* How It Works */}
       <HowItWorks />
+      <VineDivider />
 
       {/* Who We Serve */}
       <WhoWeServe />
