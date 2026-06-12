@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useCart } from '@/lib/cart';
@@ -32,7 +33,7 @@ export default function Header() {
       <header className="header">
         <div className="header-inner">
           <div className="logo">
-            <Link href="/"><img src="/logo/logo.png" alt="№40 TRAY" /></Link>
+            <Link href="/"><Image src="/logo/logo.png" alt="№40 TRAY" width={160} height={60} priority /></Link>
           </div>
           {/* Desktop nav */}
           <nav className="nav">
@@ -52,7 +53,7 @@ export default function Header() {
               onClick={() => setCartOpen(true)}
               aria-label="Open cart"
             >
-              <img src="/images/carticon.png" alt="Cart" />
+              <Image src="/images/carticon.png" alt="Cart" width={32} height={32} />
               {totalCount > 0 && (
                 <span className="cart-badge">{totalCount > 9 ? '9+' : totalCount}</span>
               )}

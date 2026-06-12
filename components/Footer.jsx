@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-brand">
-          <img src="/logo/logo.png" alt="№40 TRAY" className="footer-logo" />
+          <Image src="/logo/logo.png" alt="№40 TRAY" width={200} height={80} className="footer-logo" />
           <p className="footer-tagline">Nature's Finest.<br/>40 Times Over.</p>
           <div className="footer-social">
             <a href="#" aria-label="Instagram" className="social-link">

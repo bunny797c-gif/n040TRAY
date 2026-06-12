@@ -54,7 +54,7 @@ export default async function HomePage() {
 
       {/* Banner */}
       <div className="banner-section">
-        <Image src="/images/bg-1.png" alt="" width={1376} height={768} priority style={{ width: '100%', height: 'auto', display: 'block' }} />
+        <Image src="/images/bg-1.png" alt="" width={1376} height={768} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
       {/* Why Microgreens */}
