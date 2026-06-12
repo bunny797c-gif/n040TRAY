@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/lib/cart';
 
-const MICROGREENS_DEFAULT = [
+const MICROGREENS = [
   {
     emoji: '🌻',
     image: '/images/mg-sunflower.jpg',
@@ -102,30 +102,7 @@ const MICROGREENS_DEFAULT = [
   },
 ];
 
-// Normalise a DB row to the shape the component expects
-function normaliseDbVariety(v) {
-  return {
-    emoji: '🌿',
-    image: v.image_url || null,
-    bg: 'linear-gradient(135deg, #e8f5e0, #c8e6b0)',
-    tag: v.tag || '',
-    tagClass: v.tag_class || '',
-    name: v.name,
-    taste: v.taste || '',
-    desc: v.description || '',
-    uses: v.uses || [],
-    nutrients: v.nutrients || [],
-    benefits: v.benefits || '',
-    growTime: v.grow_time || '',
-    servingSize: v.serving_size || '60g tray',
-    dailyIntake: v.daily_intake || '',
-  };
-}
-
-export default function MicrogreensGrid({ label, title, subtitle, varieties: dbVarieties }) {
-  const items = dbVarieties && dbVarieties.length > 0
-    ? dbVarieties.map(normaliseDbVariety)
-    : MICROGREENS_DEFAULT;
+export default function MicrogreensGrid({ label, title, subtitle }) {
   const [selected, setSelected] = useState(null);
   const [addedName, setAddedName] = useState(null);
   const { addItem } = useCart();
@@ -144,7 +121,7 @@ export default function MicrogreensGrid({ label, title, subtitle, varieties: dbV
           <h2 className="section-title">{title}</h2>
           <p className="section-subtitle">{subtitle}</p>
           <div className="products-grid">
-            {items.map((p) => (
+            {MICROGREENS.map((p) => (
               <div
                 className="product-card"
                 key={p.name}

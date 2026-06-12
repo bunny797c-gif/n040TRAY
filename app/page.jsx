@@ -7,7 +7,6 @@ import MicrogreensGrid from './MicrogreensGrid';
 import { WhyChooseUs, OurStandards, HowItWorks, WhoWeServe, HeroStats, VineDivider } from './HomeSections';
 import PremiumMotion from './PremiumMotion';
 import { getSiteContent, t } from '@/lib/content';
-import { createClient } from '@/lib/supabase/server';
 
 export const revalidate = 0;
 
@@ -19,23 +18,8 @@ function lines(text) {
   ));
 }
 
-async function getVisibleVarieties() {
-  try {
-    const supabase = createClient();
-    const { data } = await supabase
-      .from('microgreens_catalog')
-      .select('*')
-      .eq('show_on_home', true)
-      .order('home_order')
-      .order('name');
-    return data || [];
-  } catch {
-    return [];
-  }
-}
-
 export default async function HomePage() {
-  const [c, varieties] = await Promise.all([getSiteContent(), getVisibleVarieties()]);
+  const c = await getSiteContent();
   return (
     <>
       <Header />
@@ -106,7 +90,6 @@ export default async function HomePage() {
         label={t(c, 'varieties.label', 'OUR VARIETIES')}
         title={t(c, 'varieties.title', 'Microgreens We Grow')}
         subtitle={t(c, 'varieties.subtitle', 'Each variety is grown in a dedicated batch, harvested at peak flavour, and packed the same day.')}
-        varieties={varieties}
       /></div>
 
       {/* Our Standards */}
