@@ -52,16 +52,19 @@ export default function Header() {
           </div>
           {/* Desktop nav */}
           <nav className="nav">
-            <Link href="/subscription">SUBSCRIPTION PLANS</Link>
-            <Link href="/#microgreens">MICROGREENS</Link>
-            <Link href="/#">SEEDS</Link>
-            {user ? (
-              <>
-                <Link href="/account">MY ACCOUNT</Link>
-                {isAdmin && <Link href="/admin" style={{ color: '#f0d59a', fontWeight: 700 }}>ADMIN</Link>}
-              </>
+            {isAdmin ? (
+              <Link href="/admin" style={{ color: '#f0d59a', fontWeight: 700 }}>ADMIN DASHBOARD</Link>
             ) : (
-              <Link href="/login">SIGN IN</Link>
+              <>
+                <Link href="/subscription">SUBSCRIPTION PLANS</Link>
+                <Link href="/#microgreens">MICROGREENS</Link>
+                <Link href="/#">SEEDS</Link>
+                {user ? (
+                  <Link href="/account">MY ACCOUNT</Link>
+                ) : (
+                  <Link href="/login">SIGN IN</Link>
+                )}
+              </>
             )}
           </nav>
           {/* Right side: cart + auth + hamburger */}
@@ -76,10 +79,10 @@ export default function Header() {
                 <span className="cart-badge">{totalCount > 9 ? '9+' : totalCount}</span>
               )}
             </button>
-            {user ? (
-              isAdmin
-                ? <Link href="/admin" className="mobile-auth-btn">ADMIN</Link>
-                : <Link href="/account" className="mobile-auth-btn">MY ACCOUNT</Link>
+            {isAdmin ? (
+              <Link href="/admin" className="mobile-auth-btn">ADMIN</Link>
+            ) : user ? (
+              <Link href="/account" className="mobile-auth-btn">MY ACCOUNT</Link>
             ) : (
               <Link href="/login" className="mobile-auth-btn">SIGN IN</Link>
             )}

@@ -20,9 +20,22 @@ function LoginInner() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) return setError(error.message);
+    // Redirect admins straight to /admin unless a specific ?next was set
+    if (next === '/account') {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', data.user.id)
+        .maybeSingle();
+      if (profile?.is_admin) {
+        router.push('/admin');
+        router.refresh();
+        return;
+      }
+    }
     router.push(next);
     router.refresh();
   }
