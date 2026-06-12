@@ -2,6 +2,19 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminUser } from '@/lib/admin';
 
+export async function GET() {
+  const { isAdmin } = await getAdminUser();
+  if (!isAdmin) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
+}
+
 export async function DELETE(req) {
   const { isAdmin } = await getAdminUser();
   if (!isAdmin) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });

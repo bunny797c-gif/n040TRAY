@@ -1436,9 +1436,28 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
   const [plans, setPlans] = useState(initialPlans);
   const [pincodes, setPincodes] = useState(initialPincodes);
   const [orders, setOrders] = useState(initialOrders);
+  const [subscriptions, setSubscriptions] = useState(initialSubscriptions);
+  const [refreshing, setRefreshing] = useState(false);
   const [dirty, setDirty] = useState({});
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
+
+  async function fetchLatest() {
+    setRefreshing(true);
+    try {
+      const [ordersRes, subsRes] = await Promise.all([
+        fetch('/api/admin/orders'),
+        fetch('/api/admin/subscriptions'),
+      ]);
+      if (ordersRes.ok) setOrders(await ordersRes.json());
+      if (subsRes.ok) setSubscriptions(await subsRes.json());
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  // Fetch fresh data on mount
+  useEffect(() => { fetchLatest(); }, []);
 
   async function saveContent() {
     const rows = Object.values(dirty);
@@ -1476,10 +1495,11 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 13 }}>
           <span style={{ color: '#7ab55c', fontWeight: 500 }}>{adminEmail}</span>
           <button
-            onClick={() => router.refresh()}
-            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#c8e6b0', fontSize: 12, fontWeight: 700, padding: '6px 12px', cursor: 'pointer', letterSpacing: 0.3 }}
+            onClick={fetchLatest}
+            disabled={refreshing}
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#c8e6b0', fontSize: 12, fontWeight: 700, padding: '6px 12px', cursor: 'pointer', letterSpacing: 0.3, opacity: refreshing ? 0.6 : 1 }}
           >
-            ↻ Refresh
+            {refreshing ? '…' : '↻ Refresh'}
           </button>
           <Link href="/" target="_blank" style={{ color: '#c8e6b0', fontWeight: 700, textDecoration: 'none', fontSize: 12 }}>VIEW SITE ↗</Link>
         </div>
@@ -1514,10 +1534,10 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
             </div>
           )}
 
-          {tab === 'overview'    && <OverviewTab stats={stats} subscriptions={initialSubscriptions} orders={orders} />}
-          {tab === 'sunday'      && <SundayPackingTab subscriptions={initialSubscriptions} stats={stats} />}
-          {tab === 'subscribers' && <SubscribersTab subscriptions={initialSubscriptions} />}
-          {tab === 'orders'      && <OrdersTab orders={orders} setOrders={setOrders} onRefresh={() => router.refresh()} />}
+          {tab === 'overview'    && <OverviewTab stats={stats} subscriptions={subscriptions} orders={orders} />}
+          {tab === 'sunday'      && <SundayPackingTab subscriptions={subscriptions} stats={stats} />}
+          {tab === 'subscribers' && <SubscribersTab subscriptions={subscriptions} />}
+          {tab === 'orders'      && <OrdersTab orders={orders} setOrders={setOrders} onRefresh={fetchLatest} />}
           {tab === 'content'     && <ContentTab content={content} setContent={setContent} dirty={dirty} setDirty={setDirty} busy={busy} setBusy={setBusy} setMsg={setMsg} />}
           {tab === 'varieties'   && <VarietiesTab />}
           {tab === 'plans'       && <PlansTab plans={plans} setPlans={setPlans} busy={busy} setBusy={setBusy} setMsg={setMsg} />}
