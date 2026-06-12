@@ -32,9 +32,6 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
   const [error, setError] = useState(null);
   const [pinStatus, setPinStatus] = useState(null);
 
-  // Variety preference
-  const [varietyType, setVarietyType] = useState(null);
-  const [varietyChoices, setVarietyChoices] = useState({}); // { member: variety } for individual/two_groups, or { '0': variety } for single
 
   // Phone OTP state
   const [phoneVerified, setPhoneVerified] = useState(
@@ -128,17 +125,6 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
 
   async function placeOrder(e) {
     e.preventDefault();
-    if (!varietyType) {
-      setError('Please select a variety preference.');
-      return;
-    }
-    if (['single','individual','two_groups'].includes(varietyType)) {
-      const needed = varietyType === 'single' ? 1 : varietyType === 'two_groups' ? 2 : (plan.audience === 'couple' ? 2 : 4);
-      if (Object.keys(varietyChoices).length < needed) {
-        setError('Please complete your variety selection.');
-        return;
-      }
-    }
     if (!pinStatus?.ok) {
       setError('Please enter a serviceable pincode before placing your order.');
       return;
@@ -155,7 +141,7 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
       const res = await fetch('/api/checkout/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan_id: plan.id, address: form, variety_type: varietyType, variety_choices: Object.values(varietyChoices) }),
+        body: JSON.stringify({ plan_id: plan.id, address: form }),
       });
 
       const data = await res.json();
@@ -209,118 +195,8 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
     }
   }
 
-  const VARIETIES = ['Sunflower', 'Radish', 'Pea Shoots', 'Broccoli', 'Wheatgrass', 'Fenugreek'];
-  const audience = plan.audience; // 'single' | 'couple' | 'family'
-
-  const VARIETY_OPTIONS = {
-    single: [
-      { key: 'single',   icon: '🌱', title: 'One Variety',     desc: 'Same variety every week. You pick which one.' },
-      { key: 'mixed',    icon: '🥗', title: 'Mixed Tray',      desc: 'Multiple varieties packed together each delivery.' },
-      { key: 'rotation', icon: '🔄', title: 'Weekly Rotation', desc: 'A different variety each week, cycling through all 6.' },
-    ],
-    couple: [
-      { key: 'single',     icon: '🌱', title: 'Same for Both',       desc: 'One variety for both of you. Pick which one.' },
-      { key: 'individual', icon: '👫', title: 'Each Their Own',       desc: 'Person 1 picks one variety, Person 2 picks another — packed separately.' },
-      { key: 'mixed',      icon: '🥗', title: 'Mixed Tray',          desc: 'Multiple varieties mixed together in each delivery.' },
-      { key: 'rotation',   icon: '🔄', title: 'Weekly Rotation',     desc: 'One different variety each week, cycling for both of you.' },
-    ],
-    family: [
-      { key: 'single',     icon: '🌱', title: 'Same for Everyone',   desc: 'One variety for the whole family. Pick which one.' },
-      { key: 'two_groups', icon: '👨‍👩‍👧', title: 'Two Groups',           desc: 'Split the box — half one variety, half another.' },
-      { key: 'individual', icon: '👨‍👩‍👧‍👦', title: 'Everyone\'s Own',      desc: 'Each family member picks their own variety — up to 4 portions.' },
-      { key: 'mixed',      icon: '🥗', title: 'Mixed Tray',          desc: 'All varieties mixed together — great for adventurous families.' },
-      { key: 'rotation',   icon: '🔄', title: 'Weekly Rotation',     desc: 'A different variety each week, enough for the whole family.' },
-    ],
-  };
-
-  const memberLabels = {
-    couple: ['Person 1', 'Person 2'],
-    family: ['Member 1', 'Member 2', 'Member 3', 'Member 4'],
-  };
-
-  const needsPicker = ['single', 'individual', 'two_groups'].includes(varietyType);
-  const pickerSlots =
-    varietyType === 'single' ? ['You'] :
-    varietyType === 'two_groups' ? ['Group 1', 'Group 2'] :
-    varietyType === 'individual' ? (memberLabels[audience] || ['You']) : [];
-
-  function pickVariety(slot, variety) {
-    setVarietyChoices((prev) => ({ ...prev, [slot]: variety }));
-  }
-
-  function varietySummary() {
-    if (!varietyType) return null;
-    if (varietyType === 'mixed') return 'Mixed Tray';
-    if (varietyType === 'rotation') return 'Weekly Rotation';
-    const entries = Object.entries(varietyChoices);
-    if (!entries.length) return null;
-    if (varietyType === 'single') return entries[0]?.[1];
-    return entries.map(([slot, v]) => `${slot}: ${v}`).join(' · ');
-  }
-
   return (
     <div className="checkout-grid">
-
-      {/* Variety Preference */}
-      <div className="card" style={{ gridColumn: '1 / -1' }}>
-        <h2>Choose Your Variety Preference</h2>
-        <p style={{ color: '#888', fontSize: 14, marginBottom: 20 }}>How would you like your microgreens packed each week?</p>
-
-        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-          {(VARIETY_OPTIONS[audience] || VARIETY_OPTIONS.single).map((opt) => (
-            <div
-              key={opt.key}
-              onClick={() => { setVarietyType(opt.key); setVarietyChoices({}); }}
-              style={{
-                flex: '1 1 160px',
-                border: varietyType === opt.key ? '2px solid #4a7c59' : '2px solid #e0e8d8',
-                borderRadius: 14,
-                padding: '16px 14px',
-                cursor: 'pointer',
-                background: varietyType === opt.key ? '#f0f8ec' : '#fff',
-                transition: 'all 0.2s',
-              }}
-            >
-              <div style={{ fontSize: 26, marginBottom: 6 }}>{opt.icon}</div>
-              <strong style={{ display: 'block', fontSize: 14, color: '#222', marginBottom: 4 }}>{opt.title}</strong>
-              <p style={{ fontSize: 12, color: '#888', margin: 0, lineHeight: 1.5 }}>{opt.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Variety picker slots */}
-        {needsPicker && pickerSlots.length > 0 && (
-          <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {pickerSlots.map((slot) => (
-              <div key={slot}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 8 }}>{slot} — select a variety:</p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {VARIETIES.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => pickVariety(slot, v)}
-                      style={{
-                        padding: '7px 16px',
-                        borderRadius: 20,
-                        border: varietyChoices[slot] === v ? '2px solid #4a7c59' : '2px solid #e0e8d8',
-                        background: varietyChoices[slot] === v ? '#4a7c59' : '#fff',
-                        color: varietyChoices[slot] === v ? '#fff' : '#444',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       <form className="card checkout-form" onSubmit={placeOrder}>
         <h2>Delivery Details</h2>
