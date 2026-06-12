@@ -10,15 +10,30 @@ import CartDrawer from './CartDrawer';
 
 export default function Header() {
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const { totalCount } = useCart();
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      setUser(session?.user ?? null)
-    );
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      const u = data.user;
+      setUser(u);
+      if (u) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', u.id)
+          .maybeSingle();
+        setIsAdmin(Boolean(profile?.is_admin));
+      }
+    }
+    loadUser();
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) setIsAdmin(false);
+    });
     return () => sub.subscription.unsubscribe();
   }, [supabase]);
 
@@ -41,7 +56,10 @@ export default function Header() {
             <Link href="/#microgreens">MICROGREENS</Link>
             <Link href="/#">SEEDS</Link>
             {user ? (
-              <Link href="/account">MY ACCOUNT</Link>
+              <>
+                <Link href="/account">MY ACCOUNT</Link>
+                {isAdmin && <Link href="/admin" style={{ color: '#f0d59a', fontWeight: 700 }}>ADMIN</Link>}
+              </>
             ) : (
               <Link href="/login">SIGN IN</Link>
             )}
@@ -59,7 +77,9 @@ export default function Header() {
               )}
             </button>
             {user ? (
-              <Link href="/account" className="mobile-auth-btn">MY ACCOUNT</Link>
+              isAdmin
+                ? <Link href="/admin" className="mobile-auth-btn">ADMIN</Link>
+                : <Link href="/account" className="mobile-auth-btn">MY ACCOUNT</Link>
             ) : (
               <Link href="/login" className="mobile-auth-btn">SIGN IN</Link>
             )}
