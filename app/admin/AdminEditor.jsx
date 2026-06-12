@@ -353,14 +353,28 @@ function StatCard({ label, value, sub, accent, icon }) {
 function OverviewTab({ stats, subscriptions, orders }) {
   const recentOrders = orders.slice(0, 8);
   const upcomingSubs = subscriptions.filter((s) => s.status === 'active').slice(0, 8);
+
+  // Compute stats live from client-fetched data
+  const today = new Date();
+  const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
+  const nextSunday = new Date(today);
+  nextSunday.setDate(today.getDate() + daysUntilSunday);
+  const nextSundayStr = nextSunday.toISOString().slice(0, 10);
+
+  const activeSubs = subscriptions.filter((s) => s.status === 'active').length;
+  const pausedSubs = subscriptions.filter((s) => s.status === 'paused').length;
+  const deliveriesThisSunday = subscriptions.filter((s) => s.status === 'active' && s.next_delivery_date === nextSundayStr).length;
+  const totalRevenue = orders.filter((o) => o.status === 'paid').reduce((s, o) => s + Number(o.amount_inr || 0), 0);
+  const pendingPayments = orders.filter((o) => o.status === 'created').length;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
-        <StatCard label="Active Subscribers" value={stats.activeSubs} sub="Current paying subscribers" accent="#4a7c59" icon="🌱" />
-        <StatCard label="Paused" value={stats.pausedSubs} sub="Will resume when unpaused" accent="#5c7aaa" icon="⏸️" />
-        <StatCard label="This Sunday" value={stats.deliveriesThisSunday} sub={`Deliveries on ${fmtDateShort(stats.nextSundayStr)}`} accent="#f0a500" icon="📦" />
-        <StatCard label="Total Revenue" value={inr(stats.totalRevenue)} sub="From paid orders" accent="#7ab55c" icon="💰" />
-        <StatCard label="Pending Payment" value={stats.pendingPayments} sub="Orders awaiting payment" accent="#e07b39" icon="⏳" />
+        <StatCard label="Active Subscribers" value={activeSubs} sub="Current paying subscribers" accent="#4a7c59" icon="🌱" />
+        <StatCard label="Paused" value={pausedSubs} sub="Will resume when unpaused" accent="#5c7aaa" icon="⏸️" />
+        <StatCard label="This Sunday" value={deliveriesThisSunday} sub={`Deliveries on ${fmtDateShort(nextSundayStr)}`} accent="#f0a500" icon="📦" />
+        <StatCard label="Total Revenue" value={inr(totalRevenue)} sub="From paid orders" accent="#7ab55c" icon="💰" />
+        <StatCard label="Pending Payment" value={pendingPayments} sub="Orders awaiting payment" accent="#e07b39" icon="⏳" />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
