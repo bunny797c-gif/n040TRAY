@@ -927,6 +927,10 @@ function VarietiesTab() {
   const [expandedId, setExpandedId] = useState(null);
   const [uploading, setUploading] = useState(null);
   const [msg, setMsg] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addBusy, setAddBusy] = useState(false);
+  const [newV, setNewV] = useState({ name: '', family: '', taste: '', description: '', price_100g: 249, price_200g: 449, price_500g: 999 });
+  const [editingPrices, setEditingPrices] = useState({}); // { id: { price_100g, price_200g, price_500g } }
 
   useEffect(() => {
     fetch('/api/admin/microgreens')
@@ -998,6 +1002,34 @@ function VarietiesTab() {
     }
   }
 
+  async function addVariety() {
+    if (!newV.name.trim()) return;
+    setAddBusy(true);
+    const res = await fetch('/api/admin/microgreens', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newV),
+    });
+    const data = await res.json();
+    setAddBusy(false);
+    if (!res.ok) { setMsg({ type: 'error', text: data.error || 'Failed to add variety' }); return; }
+    setVarieties((prev) => [...prev, data.variety]);
+    setNewV({ name: '', family: '', taste: '', description: '', price_100g: 249, price_200g: 449, price_500g: 999 });
+    setShowAddForm(false);
+    setMsg({ type: 'ok', text: `${data.variety.name} added! Upload an image and enable it in the catalog.` });
+  }
+
+  async function savePrices(v) {
+    const ep = editingPrices[v.id];
+    if (!ep) return;
+    const ok = await patch(v.id, { price_100g: Number(ep.price_100g), price_200g: Number(ep.price_200g), price_500g: Number(ep.price_500g) });
+    if (ok) {
+      setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, ...ep } : x));
+      setEditingPrices((prev) => { const n = { ...prev }; delete n[v.id]; return n; });
+      setMsg({ type: 'ok', text: `Prices updated for ${v.name}.` });
+    }
+  }
+
   if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#aaa', fontSize: 14 }}>Loading varieties…</div>;
 
   return (
@@ -1013,12 +1045,67 @@ function VarietiesTab() {
         <div style={{ background: '#fdecea', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 700, color: '#b0281e' }}>
           ✗ {varieties.filter((v) => v.out_of_stock).length} out of stock
         </div>
+        <button
+          onClick={() => setShowAddForm(true)}
+          style={{ marginLeft: 'auto', background: '#1a2e1a', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.3 }}
+        >
+          + Add Variety
+        </button>
         {msg && (
           <div style={{ flex: 1, padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, background: msg.type === 'error' ? '#fdecea' : '#eef7e8', color: msg.type === 'error' ? '#b0281e' : '#3d6b2e', border: `1px solid ${msg.type === 'error' ? '#f5c6c3' : '#c3e6b0'}` }}>
             {msg.text}
           </div>
         )}
       </div>
+
+      {/* Add Variety Modal */}
+      {showAddForm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 480, boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 800, color: '#1a2e1a' }}>Add New Variety</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { label: 'Name *', key: 'name', placeholder: 'e.g. Basil' },
+                { label: 'Family', key: 'family', placeholder: 'e.g. Herb' },
+                { label: 'Taste', key: 'taste', placeholder: 'e.g. Sweet, aromatic' },
+                { label: 'Description', key: 'description', placeholder: 'Short description…' },
+              ].map(({ label, key, placeholder }) => (
+                <div key={key}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#666', display: 'block', marginBottom: 4 }}>{label}</label>
+                  <input
+                    value={newV[key]}
+                    onChange={(e) => setNewV((p) => ({ ...p, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+              ))}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#666', display: 'block', marginBottom: 6 }}>Prices (₹)</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  {[['100g', 'price_100g'], ['200g', 'price_200g'], ['500g', 'price_500g']].map(([label, key]) => (
+                    <div key={key}>
+                      <div style={{ fontSize: 11, color: '#aaa', marginBottom: 3 }}>{label}</div>
+                      <input
+                        type="number"
+                        value={newV[key]}
+                        onChange={(e) => setNewV((p) => ({ ...p, [key]: e.target.value }))}
+                        style={{ ...inputStyle, width: '100%', padding: '8px 10px' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              <button onClick={() => setShowAddForm(false)} style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #ddd', background: '#f5f5f0', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#555' }}>Cancel</button>
+              <button onClick={addVariety} disabled={addBusy || !newV.name.trim()} style={{ flex: 2, padding: '12px', borderRadius: 10, border: 'none', background: '#4a7c59', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 800, opacity: addBusy || !newV.name.trim() ? 0.6 : 1 }}>
+                {addBusy ? 'Adding…' : 'Add Variety'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search + filters */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -1162,6 +1249,38 @@ function VarietiesTab() {
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                         {v.uses?.map((u) => <span key={u} style={{ background: '#f7fbf3', color: '#555', fontSize: 11, padding: '3px 8px', borderRadius: 20, border: '1px solid #e0ead8' }}>{u}</span>)}
                       </div>
+                    </div>
+                    {/* Price editing */}
+                    <div style={{ background: '#f7fbf3', borderRadius: 10, padding: '12px 14px' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', marginBottom: 8 }}>Prices (₹)</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                        {[['100g', 'price_100g'], ['200g', 'price_200g'], ['500g', 'price_500g']].map(([label, key]) => {
+                          const ep = editingPrices[v.id];
+                          const val = ep ? ep[key] : (v[key] ?? '');
+                          return (
+                            <div key={key}>
+                              <div style={{ fontSize: 11, color: '#888', marginBottom: 3 }}>{label}</div>
+                              <input
+                                type="number"
+                                value={val}
+                                onChange={(e) => setEditingPrices((prev) => ({
+                                  ...prev,
+                                  [v.id]: { price_100g: v.price_100g ?? 249, price_200g: v.price_200g ?? 449, price_500g: v.price_500g ?? 999, ...(prev[v.id] || {}), [key]: e.target.value }
+                                }))}
+                                style={{ width: '100%', padding: '7px 8px', borderRadius: 7, border: '1px solid #d0e4c8', fontSize: 13, fontWeight: 700, textAlign: 'center' }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {editingPrices[v.id] && (
+                        <button
+                          onClick={() => savePrices(v)}
+                          style={{ marginTop: 10, width: '100%', background: '#4a7c59', color: '#fff', border: 'none', borderRadius: 8, padding: '8px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                        >
+                          Save Prices
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
