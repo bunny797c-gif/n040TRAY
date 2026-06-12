@@ -29,7 +29,7 @@ export default async function HomePage() {
         <section className="hero">
           <div className="hero-left">
             <div className="hero-label">
-              {t(c, 'hero.label', '') || <span className="brand-name">№40 <span className="brand-tray">TRAY</span></span>}
+              {t(c, 'hero.label', '') || <span className="brand-name"><Image src="/logo/n40.png" alt="№40" width={80} height={80} className="hero-logo-img" priority /><span className="brand-tray">TRAY</span></span>}
             </div>
             <h1 className="hero-title">{lines(t(c, 'hero.title', 'Harvested Today.|On Your Plate|Tomorrow.'))}</h1>
             <p className="hero-subtitle">{lines(t(c, 'hero.subtitle', 'Fresh, nutrient-dense microgreens grown with care|and delivered at peak freshness.'))}</p>
@@ -37,7 +37,7 @@ export default async function HomePage() {
               <Link href="/subscription" className="btn-primary"><span>{t(c, 'hero.primary_cta', 'START A SUBSCRIPTION')}</span></Link>
               <Link href="#microgreens" className="btn-secondary"><span>{t(c, 'hero.secondary_cta', 'SHOP MICROGREENS')}</span></Link>
             </div>
-            <div className="badges">
+            <div className="badges badges-desktop">
               <HeroStats />
             </div>
           </div>
@@ -45,13 +45,16 @@ export default async function HomePage() {
             <div className="product-image">
               <Image src={t(c, 'hero.image', '/images/img-1.jpg')} alt="Fresh Microgreens" width={798} height={1200} priority style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
             </div>
+            <div className="badges badges-mobile">
+              <HeroStats />
+            </div>
           </div>
         </section>
       </div>
 
       {/* Banner */}
       <div className="banner-section">
-        <Image src="/images/bg-1.jpg" alt="Banner" width={1376} height={768} priority style={{ width: '100%', height: 'auto' }} />
+        <Image src="/images/bg-1.png" alt="" width={1376} height={768} priority style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
       {/* Why Microgreens */}

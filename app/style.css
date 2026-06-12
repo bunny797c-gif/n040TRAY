@@ -726,6 +726,17 @@ body {
     font-size: 19px;
     font-weight: 700;
     letter-spacing: 1.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    vertical-align: middle;
+}
+
+.hero-logo-img {
+    width: 35px;
+    height: auto;
+    mix-blend-mode: multiply;
+    display: block;
 }
 
 .brand-tray {
@@ -884,6 +895,12 @@ body {
 .why-micro-section {
     margin-top: 0;
     padding: clamp(50px, 7vw, 100px) clamp(20px, 5vw, 80px);
+}
+
+@media (min-width: 992px) {
+    .why-micro-section {
+        margin-top: -200px;
+    }
 }
 
 .why-micro-inner {
@@ -1111,7 +1128,13 @@ body {
 .banner-section {
     width: 100%;
     line-height: 0;
-    margin-top: 0;
+    margin-top: 40px;
+}
+
+@media (max-width: 991px) {
+    .banner-section {
+        margin-top: 32px;
+    }
 }
 
 .banner-section img {
@@ -1124,9 +1147,12 @@ body {
 }
 
 @media (min-width: 992px) {
+    .banner-section {
+        margin-top: -200px;
+    }
     .banner-section img {
-        max-height: 320px;
-        object-fit: cover;
+        max-height: none;
+        object-fit: unset;
         object-position: center;
     }
 }
@@ -1153,7 +1179,7 @@ body {
     }
 
     .button-group { justify-content: center; }
-    .badges { display: none; }
+    /* badges visibility handled by badges-desktop / badges-mobile classes */
 
     .hero-right {
         width: 100%;
@@ -3223,13 +3249,31 @@ h1:not(.hero-title):not(.brand-name),
     .hero-stat { transition: none; }
 }
 
-/* Live hero stats render at every breakpoint (old rule hid .badges in favour of stats-tab image) */
+/* Desktop: show badges-desktop, hide badges-mobile */
+.badges-mobile { display: none; }
+.badges-desktop { display: flex; }
+
+/* Mobile: hide badges-desktop, show badges-mobile to the right of the image */
 @media (max-width: 991px) {
-    .badges { display: flex; justify-content: center; }
-    .hero-stats { margin: 0 auto; max-width: 460px; }
-    .hero-stat { text-align: left; }
+    .badges-desktop { display: none; }
+    .badges-mobile {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex: 1;
+        min-width: 0;
+    }
+    .badges-mobile .hero-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+    .badges-mobile .hero-stat {
+        padding: 10px 12px;
+    }
 }
 
 /* Contain overscaled parallax images */
-.banner-section { overflow: hidden; }
+.banner-section { overflow: visible; }
 .why-micro-center { overflow: visible; }

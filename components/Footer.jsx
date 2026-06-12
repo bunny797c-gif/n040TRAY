@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -54,7 +55,7 @@ export default function Footer() {
       </div>
       <div className="footer-bottom">
         <div className="footer-bottom-inner">
-          <p>© 2025 <span className="brand-name">№40 <span className="brand-tray">TRAY</span></span>. All rights reserved.</p>
+          <p>© 2025 <span className="brand-name"><Image src="/logo/n40.png" alt="№40" width={35} height={35} className="hero-logo-img" /><span className="brand-tray">TRAY</span></span>. All rights reserved.</p>
           <div className="footer-legal">
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>

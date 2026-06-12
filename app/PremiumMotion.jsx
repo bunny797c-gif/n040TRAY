@@ -70,7 +70,6 @@ export default function PremiumMotion() {
       });
     };
     px('.product-image img', -8);
-    px('.banner-section img', 6);
     px('.why-micro-center img', -10);
 
     /* ── 4. Count-up stats ── */
