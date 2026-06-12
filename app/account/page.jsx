@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import { createClient } from '@/lib/supabase/server';
 import AccountSidebar from './AccountSidebar';
 import SubscriptionActions from './SubscriptionActions';
+import { todayIST } from '@/lib/dates';
 
 function inr(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
 
@@ -32,8 +33,7 @@ function buildSchedule(sub) {
   first.setDate(first.getDate() + ((7 - first.getDay()) % 7 || 7));
 
   const next = sub.next_delivery_date ? new Date(sub.next_delivery_date.slice(0, 10) + 'T00:00:00') : null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date(todayIST() + 'T00:00:00');
 
   const list = [];
   let d = new Date(first);
@@ -73,8 +73,7 @@ const TRACK_PROGRESS = { paid: 1, packed: 2, out_for_delivery: 3, delivered: 4 }
 function arrivalLabel(d) {
   if (!d) return null;
   const date = new Date(d + 'T00:00:00');
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date(todayIST() + 'T00:00:00');
   const txt = date.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
   return date.getTime() === today.getTime() ? `Arriving today, ${txt}` : `Arriving ${txt}`;
 }

@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Razorpay from 'razorpay';
-
-// Next Sunday (orders placed Mon–Sat deliver the upcoming Sunday;
-// orders on Sunday deliver the following Sunday).
-function nextSunday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + ((7 - d.getDay()) % 7 || 7));
-  return d.toISOString().slice(0, 10);
-}
+import { nextSundayIST } from '@/lib/dates';
 
 const PACK_PRICE_COL = { '100g': 'price_100g', '200g': 'price_200g', '500g': 'price_500g' };
 const FALLBACK_PRICE = 249;
@@ -72,7 +64,7 @@ export async function POST(req) {
     orderItems.push({ name: i.name, pack: i.packLabel || null, qty, price: unitPrice });
   }
 
-  const deliveryDate = nextSunday();
+  const deliveryDate = nextSundayIST();
 
   // Save address
   const { data: addr, error: addrError } = await supabase

@@ -1064,6 +1064,195 @@ a { color: inherit; }
     text-align: center;
 }
 
+/* ═══════════════════════════════════════════
+   Admin panel layout (mobile responsive)
+═══════════════════════════════════════════ */
+.admin-root {
+    min-height: 100vh;
+    background: #f2f2ed;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-topbar {
+    background: #1a2e1a;
+    color: #fff;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.admin-topbar-right {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 13px;
+    min-width: 0;
+}
+
+.admin-topbar-email {
+    color: #7ab55c;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-body {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-sidenav {
+    width: 210px;
+    background: #fff;
+    border-right: 1px solid #eee;
+    padding: 20px 12px;
+    flex-shrink: 0;
+}
+
+.admin-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 11px 14px;
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    background: transparent;
+    color: #666;
+    font-weight: 500;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.admin-nav-btn--active {
+    background: #eef5e6;
+    color: #3d5a45;
+    font-weight: 700;
+}
+
+.admin-main {
+    flex: 1;
+    padding: 28px;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+/* Content tab: live preview + edit panel */
+.admin-content-tab {
+    display: flex;
+    flex-direction: column;
+    margin: -28px;
+    height: calc(100vh - 56px);
+}
+
+.admin-content-body {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.admin-content-preview {
+    position: relative;
+    border-right: 1px solid #eee;
+    background: #f0f0ea;
+}
+
+.admin-content-panel {
+    overflow-y: auto;
+    background: #fafaf7;
+    padding: 24px;
+}
+
+/* Two-column card grids (overview lists, etc.) */
+.admin-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Sunday packing summary cards */
+.admin-pack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+/* ── Mobile / tablet ── */
+@media (max-width: 900px) {
+    .admin-content-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: 45vh 1fr;
+    }
+
+    .admin-content-preview {
+        border-right: none;
+        border-bottom: 1px solid #eee;
+    }
+
+    .admin-2col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+    .admin-topbar {
+        padding: 0 14px;
+    }
+
+    .admin-topbar-email { display: none; }
+
+    /* Sidebar becomes a sticky horizontal tab bar */
+    .admin-body { flex-direction: column; }
+
+    .admin-sidenav {
+        width: 100%;
+        display: flex;
+        overflow-x: auto;
+        padding: 8px 10px;
+        border-right: none;
+        border-bottom: 1px solid #eee;
+        gap: 4px;
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .admin-sidenav::-webkit-scrollbar { display: none; }
+
+    .admin-nav-btn {
+        width: auto;
+        flex-shrink: 0;
+        padding: 9px 13px;
+        margin-bottom: 0;
+        border-radius: 20px;
+        background: #f4f4f0;
+    }
+
+    .admin-nav-btn--active { background: #4a7c59; color: #fff; }
+
+    .admin-main { padding: 16px 14px 90px; }
+
+    .admin-content-tab {
+        margin: -16px -14px;
+        height: auto;
+        min-height: calc(100vh - 110px);
+    }
+
+    .admin-pack-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Delivery schedule ── */
 .acct-sched-list {
     padding: 0 20px;

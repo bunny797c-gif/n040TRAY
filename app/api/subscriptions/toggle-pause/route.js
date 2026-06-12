@@ -1,18 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { istDayOfWeek, nextSundayIST } from '@/lib/dates';
 
-function nextSundayAfter(date) {
-  const d = new Date(date);
-  const daysUntilSun = (7 - d.getDay()) % 7 || 7;
-  d.setDate(d.getDate() + daysUntilSun);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-// Lock window: Saturday 00:00 → Monday 00:00 (delivery weekend, no changes allowed)
+// Lock window: Saturday 00:00 → Monday 00:00 IST (delivery weekend, no changes allowed)
 // Buttons are active Mon–Fri (any time before Friday midnight).
-function isInLockWindow(now = new Date()) {
-  const day = now.getDay(); // 0=Sun, 6=Sat
+function isInLockWindow() {
+  const day = istDayOfWeek(); // 0=Sun, 6=Sat (IST)
   return day === 0 || day === 6;
 }
 
@@ -48,8 +41,7 @@ export async function POST(req) {
   }
 
   // Enforce lock window: no changes Sat–Sun (delivery weekend)
-  const now = new Date();
-  if (isInLockWindow(now)) {
+  if (isInLockWindow()) {
     return NextResponse.json(
       { error: "Changes are locked from Friday midnight through Sunday. Please try again on Monday." },
       { status: 400 }
@@ -64,7 +56,7 @@ export async function POST(req) {
     message = "Subscription paused. Resume any Mon–Fri before Friday midnight to receive deliveries again. No deliveries are lost while paused.";
   } else {
     newStatus = 'active';
-    newNextDelivery = nextSundayAfter(now).toISOString().slice(0, 10);
+    newNextDelivery = nextSundayIST();
     message = `Welcome back! Your next delivery is ${fmtDelivery(newNextDelivery)}.`;
   }
 

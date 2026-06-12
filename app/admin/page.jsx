@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminUser } from '@/lib/admin';
 import AdminEditor from './AdminEditor';
+import { nextSundayIST } from '@/lib/dates';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,12 +54,8 @@ export default async function AdminPage() {
   const totalRevenue = allOrders.filter((o) => o.status === 'paid').reduce((s, o) => s + Number(o.amount_inr || 0), 0);
   const pendingPayments = allOrders.filter((o) => o.status === 'created').length;
 
-  // Next Sunday deliveries
-  const today = new Date();
-  const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
-  const nextSunday = new Date(today);
-  nextSunday.setDate(today.getDate() + daysUntilSunday);
-  const nextSundayStr = nextSunday.toISOString().slice(0, 10);
+  // Next Sunday deliveries (IST)
+  const nextSundayStr = nextSundayIST();
   const deliveriesThisSunday = allSubs.filter(
     (s) => s.status === 'active' && s.next_delivery_date === nextSundayStr
   ).length;

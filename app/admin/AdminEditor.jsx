@@ -357,12 +357,13 @@ function OverviewTab({ stats, subscriptions, orders }) {
   const recentOrders = orders.slice(0, 8);
   const upcomingSubs = subscriptions.filter((s) => s.status === 'active').slice(0, 8);
 
-  // Compute stats live from client-fetched data
+  // Compute stats live from client-fetched data.
+  // Format in LOCAL time — toISOString() shifts the day for IST.
   const today = new Date();
   const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
   const nextSunday = new Date(today);
   nextSunday.setDate(today.getDate() + daysUntilSunday);
-  const nextSundayStr = nextSunday.toISOString().slice(0, 10);
+  const nextSundayStr = `${nextSunday.getFullYear()}-${String(nextSunday.getMonth() + 1).padStart(2, '0')}-${String(nextSunday.getDate()).padStart(2, '0')}`;
 
   const activeSubs = subscriptions.filter((s) => s.status === 'active').length;
   const pausedSubs = subscriptions.filter((s) => s.status === 'paused').length;
@@ -379,7 +380,7 @@ function OverviewTab({ stats, subscriptions, orders }) {
         <StatCard label="Total Revenue" value={inr(totalRevenue)} sub="From paid orders" accent="#7ab55c" icon="💰" />
         <StatCard label="Pending Payment" value={pendingPayments} sub="Orders awaiting payment" accent="#e07b39" icon="⏳" />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="admin-2col">
         <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 15, color: '#333' }}>Active Subscribers</h3>
           {upcomingSubs.length === 0
@@ -674,7 +675,7 @@ function ContentTab({ content, setContent, dirty, setDirty, busy, setBusy, setMs
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, margin: '-28px', height: 'calc(100vh - 56px)' }}>
+    <div className="admin-content-tab">
 
       {/* Top: numbered section chips */}
       <div style={{ background: '#fff', borderBottom: '1px solid #eee', padding: '12px 20px', display: 'flex', gap: 6, overflowX: 'auto', flexShrink: 0, alignItems: 'center' }}>
@@ -704,11 +705,11 @@ function ContentTab({ content, setContent, dirty, setDirty, busy, setBusy, setMs
         })}
       </div>
 
-      {/* Body: iframe left + edit panel right */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', flex: 1, overflow: 'hidden' }}>
+      {/* Body: iframe left + edit panel right (stacked on mobile) */}
+      <div className="admin-content-body">
 
         {/* Left: live site iframe */}
-        <div style={{ position: 'relative', borderRight: '1px solid #eee', background: '#f0f0ea' }}>
+        <div className="admin-content-preview">
           {/* Section highlight label overlay */}
           <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10, background: '#1a2e1a', color: '#c8e6b0', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 20, pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>{selected.icon}</span>
@@ -727,7 +728,7 @@ function ContentTab({ content, setContent, dirty, setDirty, busy, setBusy, setMs
         </div>
 
         {/* Right: edit panel */}
-        <div style={{ overflowY: 'auto', background: '#fafaf7', padding: 24 }}>
+        <div className="admin-content-panel">
           {selectedDef ? (
             <>
               <div style={{ marginBottom: 20 }}>
@@ -1523,7 +1524,7 @@ function SundayPackingTab({ subscriptions, stats }) {
   return (
     <div style={{ maxWidth: 900 }}>
       {/* Date header */}
-      <div style={{ background: '#1a2e1a', borderRadius: 14, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: '#1a2e1a', borderRadius: 14, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#7ab55c', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>Next Delivery</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: '#fff' }}>
@@ -1548,7 +1549,7 @@ function SundayPackingTab({ subscriptions, stats }) {
       {/* Packing summary */}
       <div style={{ marginBottom: 24 }}>
         <h3 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>Packing Summary</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        <div className="admin-pack-grid">
           {[
             { label: 'Single', count: single, desc: '4 varieties · 25g each · 100g total', bg: '#eef5e6', color: '#3d6b2e', icon: '🧑' },
             { label: 'Couple', count: couple, desc: '4 varieties · 50g each · 200g total', bg: '#e8f0ff', color: '#2e4a8a', icon: '👫' },
@@ -1712,32 +1713,32 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f2f2ed', fontFamily: 'inherit', display: 'flex', flexDirection: 'column' }}>
+    <div className="admin-root" style={{ fontFamily: 'inherit' }}>
       {/* Top bar */}
-      <div style={{ background: '#1a2e1a', color: '#fff', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56, flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div className="admin-topbar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
           <span style={{ fontSize: 20 }}>🌱</span>
-          <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 0.3 }}>№40 TRAY — Admin</span>
+          <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 0.3, whiteSpace: 'nowrap' }}>№40 TRAY — Admin</span>
         </div>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 13 }}>
-          <span style={{ color: '#7ab55c', fontWeight: 500 }}>{adminEmail}</span>
+        <div className="admin-topbar-right">
+          <span className="admin-topbar-email">{adminEmail}</span>
           <button
             onClick={fetchLatest}
             disabled={refreshing}
-            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#c8e6b0', fontSize: 12, fontWeight: 700, padding: '6px 12px', cursor: 'pointer', letterSpacing: 0.3, opacity: refreshing ? 0.6 : 1 }}
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#c8e6b0', fontSize: 12, fontWeight: 700, padding: '6px 12px', cursor: 'pointer', letterSpacing: 0.3, opacity: refreshing ? 0.6 : 1, whiteSpace: 'nowrap' }}
           >
             {refreshing ? '…' : '↻ Refresh'}
           </button>
-          <Link href="/" target="_blank" style={{ color: '#c8e6b0', fontWeight: 700, textDecoration: 'none', fontSize: 12 }}>VIEW SITE ↗</Link>
+          <Link href="/" target="_blank" style={{ color: '#c8e6b0', fontWeight: 700, textDecoration: 'none', fontSize: 12, whiteSpace: 'nowrap' }}>VIEW SITE ↗</Link>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flex: 1 }}>
-        {/* Sidebar */}
-        <aside style={{ width: 210, background: '#fff', borderRight: '1px solid #eee', padding: '20px 12px', flexShrink: 0 }}>
+      <div className="admin-body">
+        {/* Sidebar (horizontal tab bar on mobile) */}
+        <aside className="admin-sidenav">
           {TABS.map(({ id, label, icon }) => (
             <button key={id} onClick={() => { setTab(id); setMsg(null); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', padding: '11px 14px', border: 'none', borderRadius: 10, marginBottom: 4, cursor: 'pointer', fontSize: 13, fontWeight: tab === id ? 700 : 500, background: tab === id ? '#eef5e6' : 'transparent', color: tab === id ? '#3d5a45' : '#666', transition: 'background 0.15s' }}>
+              className={`admin-nav-btn${tab === id ? ' admin-nav-btn--active' : ''}`}>
               <span style={{ fontSize: 16 }}>{icon}</span>
               {label}
               {id === 'content' && dirtyCount > 0 && (
@@ -1748,7 +1749,7 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
         </aside>
 
         {/* Main */}
-        <main style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
+        <main className="admin-main">
           <div style={{ marginBottom: 24 }}>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#1a2e1a' }}>
               {TABS.find((t) => t.id === tab)?.icon} {TABS.find((t) => t.id === tab)?.label}

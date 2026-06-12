@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { istDayOfWeek, addDays } from '@/lib/dates';
 
-function isInLockWindow(now = new Date()) {
-  const day = now.getDay(); // 0=Sun, 6=Sat
+function isInLockWindow() {
+  const day = istDayOfWeek(); // 0=Sun, 6=Sat (IST)
   return day === 0 || day === 6;
 }
 
@@ -38,9 +39,7 @@ export async function POST(req) {
   }
 
   // Push delivery by exactly 7 days (next Sunday)
-  const nextDelivery = new Date(sub.next_delivery_date + 'T00:00:00');
-  nextDelivery.setDate(nextDelivery.getDate() + 7);
-  const newDate = nextDelivery.toISOString().slice(0, 10);
+  const newDate = addDays(sub.next_delivery_date, 7);
 
   const { error: updateError } = await supabase
     .from('subscriptions')

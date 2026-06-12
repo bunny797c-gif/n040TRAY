@@ -2,16 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Razorpay from 'razorpay';
 import { sendOrderConfirmation } from '@/lib/email';
-
-function nextDeliveryDate(today = new Date()) {
-  // Deliveries happen ONLY on Sundays (day 0).
-  // Returns the next upcoming Sunday after `today`.
-  // If today is Sunday, returns the Sunday a week from now.
-  const d = new Date(today);
-  const daysUntilSunday = (7 - d.getDay()) % 7 || 7;
-  d.setDate(d.getDate() + daysUntilSunday);
-  return d.toISOString().slice(0, 10);
-}
+import { nextSundayIST, todayIST } from '@/lib/dates';
 
 export async function POST(req) {
   const supabase = createClient();
@@ -74,7 +65,7 @@ export async function POST(req) {
   if (addrError) return NextResponse.json({ error: addrError.message }, { status: 500 });
 
   // Create pending subscription
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
   const { data: sub, error: subError } = await supabase
     .from('subscriptions')
     .insert({
@@ -83,7 +74,7 @@ export async function POST(req) {
       address_id: addr.id,
       status: 'pending_payment',
       start_date: today,
-      next_delivery_date: nextDeliveryDate(),
+      next_delivery_date: nextSundayIST(),
     })
     .select()
     .single();
