@@ -425,14 +425,14 @@ function SubscribersTab({ subscriptions }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: '#f9f9f6' }}>
-              {['Customer','Plan','Audience','Status','Variety','Next Delivery','Started','Price'].map((h) => (
+              {['Customer','Plan','Audience','Status','Next Delivery','Started','Price'].map((h) => (
                 <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.4, borderBottom: '1px solid #eee', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={8} style={{ padding: '32px', textAlign: 'center', color: '#bbb', fontSize: 14 }}>No subscribers match this filter.</td></tr>
+              <tr><td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: '#bbb', fontSize: 14 }}>No subscribers match this filter.</td></tr>
             ) : filtered.map((s, i) => (
               <tr key={s.id} style={{ background: i % 2 === 0 ? '#fff' : '#fafaf7' }}>
                 <td style={{ padding: '12px 14px' }}>
@@ -442,10 +442,6 @@ function SubscribersTab({ subscriptions }) {
                 <td style={{ padding: '12px 14px', color: '#444' }}>{s.plans?.name || '—'}</td>
                 <td style={{ padding: '12px 14px', textTransform: 'capitalize', color: '#666' }}>{s.plans?.audience || '—'}</td>
                 <td style={{ padding: '12px 14px' }}><StatusBadge status={s.status} /></td>
-                <td style={{ padding: '12px 14px', color: '#666', fontSize: 12 }}>
-                  <div style={{ textTransform: 'capitalize' }}>{s.variety_type?.replace(/_/g, ' ') || '—'}</div>
-                  {s.variety_choices?.length > 0 && <div style={{ color: '#aaa' }}>{s.variety_choices.join(', ')}</div>}
-                </td>
                 <td style={{ padding: '12px 14px', color: s.status === 'paused' ? '#aaa' : '#444', whiteSpace: 'nowrap' }}>{s.status === 'paused' ? <em>Paused</em> : fmtDate(s.next_delivery_date)}</td>
                 <td style={{ padding: '12px 14px', color: '#888', whiteSpace: 'nowrap' }}>{fmtDate(s.start_date)}</td>
                 <td style={{ padding: '12px 14px', fontWeight: 700, color: '#4a7c59' }}>{inr(s.plans?.price_inr || 0)}</td>
