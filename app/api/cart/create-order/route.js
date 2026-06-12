@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Razorpay from 'razorpay';
 import { nextSundayIST } from '@/lib/dates';
+import { sendCartConfirmation } from '@/lib/email';
 
 const PACK_PRICE_COL = { '100g': 'price_100g', '200g': 'price_200g', '500g': 'price_500g' };
 const FALLBACK_PRICE = 249;
@@ -84,6 +85,16 @@ export async function POST(req) {
   const key_secret = process.env.RAZORPAY_KEY_SECRET;
   if (!key_id || !key_secret || key_id.includes('REPLACE_ME') || key_secret.includes('REPLACE_ME')) {
     await supabase.from('orders').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', order.id);
+    // Fire-and-forget confirmation email (stub flow used in dev/preview)
+    if (user.email) {
+      sendCartConfirmation(user.email, {
+        name: address.full_name,
+        items: orderItems,
+        amount: totalAmt,
+        deliveryDate,
+        address: { ...address, full_name: address.full_name },
+      }).catch((e) => console.error('[cart] email send failed', e));
+    }
     return NextResponse.json({ stub: true });
   }
 

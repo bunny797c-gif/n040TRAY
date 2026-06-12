@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
+import { sendCartConfirmation } from '@/lib/email';
 
 export async function POST(req) {
   const supabase = createClient();
@@ -24,6 +25,31 @@ export async function POST(req) {
     .update({ status: 'paid', paid_at: new Date().toISOString(), razorpay_payment_id })
     .eq('id', order_db_id)
     .eq('user_id', user.id);
+
+  // Confirmation email — fetch items + most recent address for this user
+  if (user.email) {
+    const { data: order } = await supabase
+      .from('orders')
+      .select('items, amount_inr, delivery_date')
+      .eq('id', order_db_id)
+      .maybeSingle();
+    const { data: addr } = await supabase
+      .from('addresses')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (order?.items) {
+      sendCartConfirmation(user.email, {
+        name: addr?.full_name,
+        items: order.items,
+        amount: order.amount_inr,
+        deliveryDate: order.delivery_date,
+        address: addr || {},
+      }).catch((e) => console.error('[cart] email send failed', e));
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }
