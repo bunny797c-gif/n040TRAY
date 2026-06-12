@@ -87,6 +87,9 @@ function LoginInner() {
           <button type="submit" className="auth-submit" disabled={busy}>
             {busy ? 'Signing in...' : 'SIGN IN'}
           </button>
+          <p className="auth-forgot">
+            <Link href="/forgot-password">Forgot password?</Link>
+          </p>
         </form>
 
         <div className="auth-divider">or</div>

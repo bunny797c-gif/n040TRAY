@@ -143,6 +143,20 @@ a { color: inherit; }
     margin-top: 24px;
 }
 
+.auth-forgot {
+    text-align: right;
+    margin: 10px 0 0;
+    font-size: 12.5px;
+}
+
+.auth-forgot a {
+    color: #7ab55c;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-forgot a:hover { text-decoration: underline; }
+
 .auth-foot a {
     color: #7ab55c;
     font-weight: 600;
