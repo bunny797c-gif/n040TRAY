@@ -2,7 +2,17 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Razorpay from 'razorpay';
 
-const ITEM_PRICE_INR = 249;
+// Next Sunday (orders placed Mon–Sat deliver the upcoming Sunday;
+// orders on Sunday deliver the following Sunday).
+function nextSunday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + ((7 - d.getDay()) % 7 || 7));
+  return d.toISOString().slice(0, 10);
+}
+
+const PACK_PRICE_COL = { '100g': 'price_100g', '200g': 'price_200g', '500g': 'price_500g' };
+const FALLBACK_PRICE = 249;
 
 export async function POST(req) {
   const supabase = createClient();
@@ -40,7 +50,29 @@ export async function POST(req) {
     return NextResponse.json({ error: "We don't deliver to this pincode yet." }, { status: 400 });
   }
 
-  const totalAmt = items.reduce((s, i) => s + i.qty * ITEM_PRICE_INR, 0);
+  // Price each item server-side from the catalog (never trust client prices)
+  const names = [...new Set(items.map((i) => i.name))];
+  const { data: catalog = [] } = await supabase
+    .from('microgreens_catalog')
+    .select('name, price_100g, price_200g, price_500g, out_of_stock')
+    .in('name', names);
+  const byName = Object.fromEntries((catalog || []).map((c) => [c.name, c]));
+
+  const orderItems = [];
+  let totalAmt = 0;
+  for (const i of items) {
+    const qty = Math.max(1, Math.min(50, Number(i.qty) || 1));
+    const cat = byName[i.name];
+    if (cat?.out_of_stock) {
+      return NextResponse.json({ error: `${i.name} is out of stock.` }, { status: 400 });
+    }
+    const col = PACK_PRICE_COL[i.packLabel];
+    const unitPrice = (cat && col && Number(cat[col])) || Number(i.price) || FALLBACK_PRICE;
+    totalAmt += qty * unitPrice;
+    orderItems.push({ name: i.name, pack: i.packLabel || null, qty, price: unitPrice });
+  }
+
+  const deliveryDate = nextSunday();
 
   // Save address
   const { data: addr, error: addrError } = await supabase
@@ -52,7 +84,7 @@ export async function POST(req) {
   // Create order row (no subscription — one-time cart order)
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .insert({ user_id: user.id, amount_inr: totalAmt, status: 'created' })
+    .insert({ user_id: user.id, amount_inr: totalAmt, status: 'created', items: orderItems, delivery_date: deliveryDate })
     .select().single();
   if (orderError) return NextResponse.json({ error: orderError.message }, { status: 500 });
 

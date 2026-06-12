@@ -5,18 +5,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/lib/cart';
 
-// Pack options: label shown, price in INR
+// Pack options — prices come from the catalog (admin-set per variety)
 const PACKS = [
-  { label: '100g', price: 249 },
-  { label: '200g', price: 449 },
-  { label: '500g', price: 999 },
+  { label: '100g', col: 'price_100g', fallback: 249 },
+  { label: '200g', col: 'price_200g', fallback: 449 },
+  { label: '500g', col: 'price_500g', fallback: 999 },
 ];
 
-// Premium varieties cost ₹50 more
-const PREMIUM = ['Broccoli', 'Kale', 'Beetroot'];
-
-function packPrice(varietyName, pack) {
-  return PREMIUM.includes(varietyName) ? pack.price + 50 : pack.price;
+function packPrice(variety, pack) {
+  return Number(variety?.[pack.col]) || pack.fallback;
 }
 
 export default function MicrogreensPageClient({ varieties }) {
@@ -39,7 +36,7 @@ export default function MicrogreensPageClient({ varieties }) {
   }, [varieties, search]);
 
   function buildCartItem(v, pack) {
-    const price = packPrice(v.name, pack);
+    const price = packPrice(v, pack);
     return {
       name: v.name,
       cartKey: `${v.name}__${pack.label}`,
@@ -81,7 +78,7 @@ export default function MicrogreensPageClient({ varieties }) {
   return (
     <main style={{ minHeight: '100vh', background: '#f7fbf3' }}>
       {/* Page header */}
-      <div style={{ background: '#1a2e1a', paddingTop: 80, paddingBottom: 48, textAlign: 'center' }}>
+      <div style={{ background: '#1a2e1a', paddingTop: 140, paddingBottom: 48, textAlign: 'center' }}>
         <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#7ab55c', letterSpacing: 2, textTransform: 'uppercase' }}>
           Our Varieties
         </p>
@@ -126,7 +123,7 @@ export default function MicrogreensPageClient({ varieties }) {
             <div className="products-grid">
               {filtered.map((v) => {
                 const cardKey = `${v.name}__${PACKS[0].label}`;
-                const price = packPrice(v.name, PACKS[0]);
+                const price = packPrice(v, PACKS[0]);
                 const isAdded = addedKey === cardKey;
                 return (
                   <div
@@ -237,7 +234,7 @@ export default function MicrogreensPageClient({ varieties }) {
                   <h4 style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>Select Pack Size</h4>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {PACKS.map((pack) => {
-                      const price = packPrice(selected.name, pack);
+                      const price = packPrice(selected, pack);
                       const isActive = selectedPack.label === pack.label;
                       return (
                         <button
@@ -267,7 +264,7 @@ export default function MicrogreensPageClient({ varieties }) {
                       onClick={(e) => handleBuyNow(selected, selectedPack, e)}
                       style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: '#2d4a2d', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.5 }}
                     >
-                      🛒 BUY NOW — ₹{packPrice(selected.name, selectedPack)}
+                      🛒 BUY NOW — ₹{packPrice(selected, selectedPack)}
                     </button>
                     <button
                       onClick={(e) => handleAddToCart(selected, selectedPack, e)}

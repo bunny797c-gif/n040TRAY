@@ -35,7 +35,7 @@ export async function PATCH(req) {
   const { id, status } = await req.json();
   if (!id || !status) return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
 
-  const allowed = ['paid', 'created', 'failed', 'cancelled'];
+  const allowed = ['paid', 'created', 'failed', 'cancelled', 'packed', 'out_for_delivery', 'delivered'];
   if (!allowed.includes(status)) return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
 
   const supabase = createAdminClient();

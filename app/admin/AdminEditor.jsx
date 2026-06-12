@@ -107,6 +107,9 @@ const STATUS_COLORS = {
   paid:            { bg: '#e8f5e0', color: '#3d6b2e' },
   created:         { bg: '#fff4e0', color: '#9a6200' },
   failed:          { bg: '#fdecea', color: '#b0281e' },
+  packed:          { bg: '#e8edf5', color: '#3a5080' },
+  out_for_delivery:{ bg: '#fff4e0', color: '#9a6200' },
+  delivered:       { bg: '#1a2e1a', color: '#c8e6b0' },
 };
 
 function StatusBadge({ status }) {
@@ -476,23 +479,32 @@ function OrdersTab({ orders, setOrders, onRefresh }) {
   const filtered = useMemo(() => filter === 'all' ? orders : orders.filter((o) => o.status === filter), [orders, filter]);
   const totalPaid = orders.filter((o) => o.status === 'paid').reduce((s, o) => s + Number(o.amount_inr || 0), 0);
 
-  async function cancelOrder(o) {
+  async function setStatus(o, status, okText) {
     const prev = o.status;
-    setOrders((all) => all.map((x) => x.id === o.id ? { ...x, status: 'cancelled' } : x));
+    setOrders((all) => all.map((x) => x.id === o.id ? { ...x, status } : x));
     const res = await fetch('/api/admin/orders', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: o.id, status: 'cancelled' }),
+      body: JSON.stringify({ id: o.id, status }),
     });
     if (!res.ok) {
       setOrders((all) => all.map((x) => x.id === o.id ? { ...x, status: prev } : x));
-      setMsg({ type: 'error', text: 'Failed to cancel order.' });
+      setMsg({ type: 'error', text: 'Failed to update order.' });
     } else {
-      setMsg({ type: 'ok', text: `Order cancelled.` });
+      setMsg({ type: 'ok', text: okText });
       onRefresh();
     }
     setTimeout(() => setMsg(null), 3000);
   }
+
+  function cancelOrder(o) { setStatus(o, 'cancelled', 'Order cancelled.'); }
+
+  // Delivery pipeline: paid → packed → out_for_delivery → delivered
+  const NEXT_STEP = {
+    paid:             { status: 'packed',           label: '📦 Mark Packed' },
+    packed:           { status: 'out_for_delivery', label: '🛵 Out for Delivery' },
+    out_for_delivery: { status: 'delivered',        label: '✅ Mark Delivered' },
+  };
 
   async function deleteOrder(id) {
     setOrders((all) => all.filter((x) => x.id !== id));
@@ -535,9 +547,9 @@ function OrdersTab({ orders, setOrders, onRefresh }) {
       )}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
-        {['all','paid','created','failed','cancelled'].map((s) => (
+        {['all','paid','packed','out_for_delivery','delivered','created','failed','cancelled'].map((s) => (
           <button key={s} onClick={() => setFilter(s)} style={{ padding: '8px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: filter === s ? '#4a7c59' : '#f0f0ea', color: filter === s ? '#fff' : '#555' }}>
-            {s === 'all' ? 'All' : s}
+            {s === 'all' ? 'All' : s.replace(/_/g, ' ')}
           </button>
         ))}
         <span style={{ marginLeft: 'auto', fontSize: 13, color: '#999' }}>
@@ -566,7 +578,15 @@ function OrdersTab({ orders, setOrders, onRefresh }) {
                 <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#888' }}>{o.paid_at ? fmtDate(o.paid_at) : '—'}</td>
                 <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    {o.status !== 'cancelled' && o.status !== 'paid' && (
+                    {NEXT_STEP[o.status] && (
+                      <button
+                        onClick={() => setStatus(o, NEXT_STEP[o.status].status, `Order moved to ${NEXT_STEP[o.status].status.replace(/_/g, ' ')}.`)}
+                        style={{ padding: '5px 10px', borderRadius: 6, border: 'none', background: '#4a7c59', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        {NEXT_STEP[o.status].label}
+                      </button>
+                    )}
+                    {o.status !== 'cancelled' && o.status !== 'paid' && o.status !== 'delivered' && !NEXT_STEP[o.status] && (
                       <button
                         onClick={() => cancelOrder(o)}
                         style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #e07b39', background: '#fff8f3', color: '#e07b39', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}

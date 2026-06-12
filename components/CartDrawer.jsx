@@ -254,7 +254,7 @@ export default function CartDrawer({ open, onClose }) {
                     <span>Subtotal</span>
                     <strong>{inr(subtotal)}</strong>
                   </div>
-                  <p className="cart-delivery-note">Free Sunday delivery · Prices per 60g tray</p>
+                  <p className="cart-delivery-note">Free delivery · Arrives this Sunday</p>
 
                   <div className="cart-drawer-actions">
                     {user ? (

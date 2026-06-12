@@ -4,13 +4,13 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 function isLocked(now = new Date()) {
-  const day = now.getDay(); // 0=Sun, 6=Sat
+  const day = now.getDay();
   return day === 0 || day === 6;
 }
 
 export default function SubscriptionActions({ subscriptionId, status, nextDeliveryDate }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(null); // 'skip' | 'pause' | 'resume'
+  const [busy, setBusy] = useState(null);
   const [message, setMessage] = useState(null);
 
   const locked = useMemo(() => isLocked(), []);
@@ -33,105 +33,44 @@ export default function SubscriptionActions({ subscriptionId, status, nextDelive
   }
 
   function skip() {
-    call(
-      '/api/subscriptions/skip',
-      { subscription_id: subscriptionId },
-      'Skip just this Sunday\'s delivery? Your subscription continues normally — next delivery moves to the following Sunday.',
-      'skip'
-    );
+    call('/api/subscriptions/skip', { subscription_id: subscriptionId },
+      "Skip this Sunday's delivery? Your subscription continues normally — next delivery moves to the following Sunday.", 'skip');
   }
 
   function pause() {
-    call(
-      '/api/subscriptions/toggle-pause',
-      { subscription_id: subscriptionId, action: 'pause' },
-      'Pause your subscription? No deliveries arrive until you resume. Nothing is lost — they continue when you come back.',
-      'pause'
-    );
+    call('/api/subscriptions/toggle-pause', { subscription_id: subscriptionId, action: 'pause' },
+      'Pause your subscription? No deliveries until you resume. Nothing is lost.', 'pause');
   }
 
   function resume() {
-    call(
-      '/api/subscriptions/toggle-pause',
-      { subscription_id: subscriptionId, action: 'resume' },
-      'Resume your subscription? Your next delivery will be the upcoming Sunday.',
-      'resume'
-    );
+    call('/api/subscriptions/toggle-pause', { subscription_id: subscriptionId, action: 'resume' },
+      'Resume your subscription? Your next delivery will be the upcoming Sunday.', 'resume');
   }
 
-  const btnBase = {
-    border: 'none',
-    borderRadius: 8,
-    padding: '10px 16px',
-    cursor: locked ? 'not-allowed' : 'pointer',
-    fontWeight: 700,
-    fontSize: 13,
-    whiteSpace: 'nowrap',
-    fontFamily: 'inherit',
-  };
-
   return (
-    <>
-      <div style={{ paddingTop: 18, borderTop: '1px solid #f0f0f0', marginTop: 8 }}>
-        <div style={{ fontSize: 13, color: '#666', lineHeight: 1.55, marginBottom: 14 }}>
-          <strong style={{ color: '#444', display: 'block', marginBottom: 4 }}>
-            {isPaused
-              ? 'Your subscription is paused.'
-              : 'Going away? You have two options:'}
-          </strong>
-          {isPaused
-            ? 'No deliveries arrive while paused. Your remaining deliveries are saved — they continue from the Sunday after you resume.'
-            : (
-              <>
-                <strong>Skip</strong> — miss just this Sunday, deliveries continue next week.<br/>
-                <strong>Pause</strong> — freeze indefinitely, resume any time (nothing lost).
-              </>
-            )}
-          <br/>
-          <em style={{ color: '#aaa', fontSize: 12 }}>
-            ⚠ Both actions lock from Friday midnight until Sunday delivery passes. If you don't act in time and aren't home, the delivery is lost (no refund or reschedule).
-          </em>
-        </div>
-
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {locked ? (
-            <button disabled style={{ ...btnBase, background: '#f5f5f5', color: '#aaa', border: '1.5px solid #e5e5e5' }}>
-              🔒 Locked until Monday
-            </button>
-          ) : isPaused ? (
-            <button
-              disabled={!!busy}
-              onClick={resume}
-              style={{ ...btnBase, background: '#4a7c59', color: '#fff' }}
-            >
-              {busy === 'resume' ? 'Resuming…' : '▶ Resume Subscription'}
-            </button>
-          ) : (
-            <>
-              <button
-                disabled={!!busy}
-                onClick={skip}
-                style={{ ...btnBase, background: '#fff8e8', color: '#b87800', border: '1.5px solid #f0d59a' }}
-              >
-                {busy === 'skip' ? 'Skipping…' : '⏭ Skip This Sunday'}
-              </button>
-              <button
-                disabled={!!busy}
-                onClick={pause}
-                style={{ ...btnBase, background: '#fff', color: '#4a5d7c', border: '1.5px solid #cbd5e0' }}
-              >
-                {busy === 'pause' ? 'Pausing…' : '⏸ Pause Subscription'}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {message && (
-        <div className={message.type === 'error' ? 'auth-error' : 'auth-success'} style={{ marginTop: 12 }}>
-          {message.text}
+    <div className="acct-actions">
+      {locked ? (
+        <div className="acct-action-locked">🔒 Actions locked Sat–Sun during delivery weekend</div>
+      ) : isPaused ? (
+        <button className="acct-action-btn acct-action-btn--resume" disabled={!!busy} onClick={resume}>
+          {busy === 'resume' ? 'Resuming…' : '▶ Resume Subscription'}
+        </button>
+      ) : (
+        <div className="acct-action-pair">
+          <button className="acct-action-btn acct-action-btn--skip" disabled={!!busy} onClick={skip}>
+            {busy === 'skip' ? '…' : '⏭ Skip This Sunday'}
+          </button>
+          <button className="acct-action-btn acct-action-btn--pause" disabled={!!busy} onClick={pause}>
+            {busy === 'pause' ? '…' : '⏸ Pause'}
+          </button>
         </div>
       )}
-    </>
+      <p className="acct-action-note">
+        ⚠ Actions lock from Friday midnight. If you miss the window and aren't home, the delivery is lost.
+      </p>
+      {message && (
+        <div className={`acct-action-msg acct-action-msg--${message.type}`}>{message.text}</div>
+      )}
+    </div>
   );
 }
