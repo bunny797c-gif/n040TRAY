@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useRef, useCallback } from 'react';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 
 // Editable sections — matches what page.jsx actually reads via t()
@@ -816,6 +816,256 @@ function PincodesTab({ pincodes, setPincodes, busy, setBusy, setMsg }) {
   );
 }
 
+// ── Varieties Tab ─────────────────────────────────────────────────────────
+const FAMILY_COLORS = {
+  Asteraceae:    { bg: '#fdf6e0', color: '#7a5c00' },
+  Brassicaceae:  { bg: '#e8f5e0', color: '#3d6b2e' },
+  Fabaceae:      { bg: '#e0f0e8', color: '#1e5e44' },
+  Poaceae:       { bg: '#f0ede0', color: '#6b5a2e' },
+  Amaranthaceae: { bg: '#fde8f5', color: '#7a2e60' },
+  Apiaceae:      { bg: '#e8edf5', color: '#2e4a80' },
+  Lamiaceae:     { bg: '#f5e8f0', color: '#6b2e5a' },
+  Polygonaceae:  { bg: '#fdecea', color: '#8b2020' },
+  Tropaeolaceae: { bg: '#fff4e0', color: '#8b5e00' },
+  Amaryllidaceae:{ bg: '#e8f0f5', color: '#2e5a70' },
+  Mixed:         { bg: '#f0f0f0', color: '#555' },
+};
+
+function VarietiesTab() {
+  const [varieties, setVarieties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [familyFilter, setFamilyFilter] = useState('all');
+  const [showOnlyHome, setShowOnlyHome] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
+  const [uploading, setUploading] = useState(null);
+  const [msg, setMsg] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/admin/microgreens')
+      .then((r) => r.json())
+      .then((d) => { setVarieties(d.varieties || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const families = useMemo(() => {
+    const s = new Set(varieties.map((v) => v.family).filter(Boolean));
+    return ['all', ...Array.from(s).sort()];
+  }, [varieties]);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return varieties.filter((v) => {
+      const matchSearch = !q || v.name.toLowerCase().includes(q) || v.family?.toLowerCase().includes(q) || v.taste?.toLowerCase().includes(q);
+      const matchFamily = familyFilter === 'all' || v.family === familyFilter;
+      const matchHome = !showOnlyHome || v.show_on_home;
+      return matchSearch && matchFamily && matchHome;
+    });
+  }, [varieties, search, familyFilter, showOnlyHome]);
+
+  const visibleOnHome = varieties.filter((v) => v.show_on_home).length;
+
+  async function patch(id, updates) {
+    const res = await fetch('/api/admin/microgreens', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...updates }),
+    });
+    if (!res.ok) {
+      const d = await res.json();
+      setMsg({ type: 'error', text: d.error || 'Update failed' });
+      return false;
+    }
+    return true;
+  }
+
+  async function toggleHome(v) {
+    const next = !v.show_on_home;
+    setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, show_on_home: next } : x));
+    const ok = await patch(v.id, { show_on_home: next });
+    if (!ok) setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, show_on_home: v.show_on_home } : x));
+    else setMsg({ type: 'ok', text: `${v.name} ${next ? 'added to' : 'removed from'} home page.` });
+  }
+
+  async function uploadImage(v, file) {
+    if (!file) return;
+    setUploading(v.id);
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch('/api/admin/upload', { method: 'POST', body: form });
+    const data = await res.json();
+    setUploading(null);
+    if (!res.ok) { setMsg({ type: 'error', text: data.error || 'Upload failed' }); return; }
+    const ok = await patch(v.id, { image_url: data.url });
+    if (ok) {
+      setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, image_url: data.url } : x));
+      setMsg({ type: 'ok', text: `Image uploaded for ${v.name}.` });
+    }
+  }
+
+  if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#aaa', fontSize: 14 }}>Loading varieties…</div>;
+
+  return (
+    <div>
+      {/* Header stats */}
+      <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ background: '#eef5e6', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 700, color: '#3d6b2e' }}>
+          🌱 {varieties.length} varieties in catalog
+        </div>
+        <div style={{ background: '#fff4e0', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 700, color: '#9a6200' }}>
+          🏠 {visibleOnHome} showing on home page
+        </div>
+        {msg && (
+          <div style={{ flex: 1, padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, background: msg.type === 'error' ? '#fdecea' : '#eef7e8', color: msg.type === 'error' ? '#b0281e' : '#3d6b2e', border: `1px solid ${msg.type === 'error' ? '#f5c6c3' : '#c3e6b0'}` }}>
+            {msg.text}
+          </div>
+        )}
+      </div>
+
+      {/* Search + filters */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 260px', minWidth: 200 }}>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: '#aaa' }}>🔍</span>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search varieties, family, taste…"
+            style={{ ...inputStyle, paddingLeft: 36 }}
+          />
+        </div>
+        <select
+          value={familyFilter}
+          onChange={(e) => setFamilyFilter(e.target.value)}
+          style={{ ...inputStyle, width: 'auto', padding: '10px 14px', cursor: 'pointer' }}
+        >
+          {families.map((f) => <option key={f} value={f}>{f === 'all' ? 'All families' : f}</option>)}
+        </select>
+        <button
+          onClick={() => setShowOnlyHome((x) => !x)}
+          style={{ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: showOnlyHome ? '#4a7c59' : '#f0f0ea', color: showOnlyHome ? '#fff' : '#666' }}
+        >
+          🏠 Home only
+        </button>
+        <span style={{ fontSize: 13, color: '#aaa', marginLeft: 4 }}>{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      {/* Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+        {filtered.map((v) => {
+          const fc = FAMILY_COLORS[v.family] || { bg: '#f0f0f0', color: '#555' };
+          const isExpanded = expandedId === v.id;
+          const isUploading = uploading === v.id;
+          return (
+            <div key={v.id} style={{ background: '#fff', borderRadius: 16, border: `2px solid ${v.show_on_home ? '#7ab55c' : '#eee'}`, overflow: 'hidden', boxShadow: v.show_on_home ? '0 2px 12px rgba(74,124,89,0.12)' : '0 1px 4px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}>
+
+              {/* Image area */}
+              <div style={{ height: 140, background: '#f7fbf3', position: 'relative', overflow: 'hidden' }}>
+                {v.image_url
+                  ? <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  : <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#bbb' }}>
+                      <span style={{ fontSize: 32 }}>🌿</span>
+                      <span style={{ fontSize: 11 }}>No image yet</span>
+                    </div>}
+                {/* Upload button overlay */}
+                <label style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(26,46,26,0.85)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {isUploading ? '⏳ Uploading…' : '📷 Upload'}
+                  <input type="file" accept="image/*" style={{ display: 'none' }} disabled={isUploading} onChange={(e) => uploadImage(v, e.target.files[0])} />
+                </label>
+                {/* Show on home badge */}
+                {v.show_on_home && (
+                  <div style={{ position: 'absolute', top: 8, left: 8, background: '#7ab55c', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 10, letterSpacing: 0.3 }}>
+                    🏠 ON HOME
+                  </div>
+                )}
+              </div>
+
+              {/* Card body */}
+              <div style={{ padding: '14px 16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1a2e1a' }}>{v.name}</h3>
+                    <span style={{ display: 'inline-block', marginTop: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: fc.bg, color: fc.color }}>{v.family}</span>
+                  </div>
+                  {v.tag && (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, background: v.tag_class?.includes('spicy') ? '#fdecea' : v.tag_class?.includes('mild') ? '#e0f0e8' : '#eef5e6', color: v.tag_class?.includes('spicy') ? '#b0281e' : v.tag_class?.includes('mild') ? '#1e5e44' : '#3d6b2e', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 8 }}>{v.tag}</span>
+                  )}
+                </div>
+
+                <p style={{ margin: '0 0 10px', fontSize: 12, color: '#666', fontStyle: 'italic' }}>✦ {v.taste}</p>
+
+                {/* Show on home toggle */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>Show on home page</span>
+                  <button
+                    onClick={() => toggleHome(v)}
+                    style={{
+                      width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+                      background: v.show_on_home ? '#7ab55c' : '#ddd',
+                      position: 'relative', transition: 'background 0.2s',
+                    }}
+                  >
+                    <span style={{
+                      position: 'absolute', top: 3, left: v.show_on_home ? 23 : 3,
+                      width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                      transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                    }} />
+                  </button>
+                </div>
+
+                {/* Grow time + intake */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                  <div style={{ flex: 1, background: '#f7fbf3', borderRadius: 8, padding: '7px 10px', fontSize: 11 }}>
+                    <div style={{ color: '#aaa', marginBottom: 2 }}>Grow time</div>
+                    <div style={{ fontWeight: 700, color: '#333' }}>{v.grow_time}</div>
+                  </div>
+                  <div style={{ flex: 1, background: '#f7fbf3', borderRadius: 8, padding: '7px 10px', fontSize: 11 }}>
+                    <div style={{ color: '#aaa', marginBottom: 2 }}>Daily intake</div>
+                    <div style={{ fontWeight: 700, color: '#333' }}>{v.daily_intake}</div>
+                  </div>
+                </div>
+
+                {/* Expand/collapse */}
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : v.id)}
+                  style={{ width: '100%', background: '#f0f0ea', border: 'none', borderRadius: 8, padding: '7px', fontSize: 12, fontWeight: 700, color: '#555', cursor: 'pointer' }}
+                >
+                  {isExpanded ? '▲ Less info' : '▼ Full details'}
+                </button>
+
+                {/* Expanded details */}
+                {isExpanded && (
+                  <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', marginBottom: 4 }}>Description</div>
+                      <p style={{ margin: 0, fontSize: 13, color: '#444', lineHeight: 1.5 }}>{v.description}</p>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', marginBottom: 4 }}>Benefits</div>
+                      <p style={{ margin: 0, fontSize: 13, color: '#444', lineHeight: 1.5 }}>{v.benefits}</p>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', marginBottom: 6 }}>Key Nutrients</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                        {v.nutrients?.map((n) => <span key={n} style={{ background: '#eef5e6', color: '#3d6b2e', fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20 }}>{n}</span>)}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', marginBottom: 6 }}>Best Uses</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                        {v.uses?.map((u) => <span key={u} style={{ background: '#f7fbf3', color: '#555', fontSize: 11, padding: '3px 8px', borderRadius: 20, border: '1px solid #e0ead8' }}>{u}</span>)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Main Admin Editor ─────────────────────────────────────────────────────
 export default function AdminEditor({ initialContent, initialPlans, initialPincodes, initialSubscriptions, initialOrders, stats, adminEmail }) {
   const [tab, setTab] = useState('overview');
@@ -849,6 +1099,7 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
     { id: 'subscribers', label: 'Subscribers',    icon: '🌱' },
     { id: 'orders',      label: 'Orders',          icon: '💳' },
     { id: 'content',     label: 'Page Content',    icon: '✏️' },
+    { id: 'varieties',   label: 'Varieties',       icon: '🥬' },
     { id: 'plans',       label: 'Plans & Pricing', icon: '📋' },
     { id: 'pincodes',    label: 'Delivery Areas',  icon: '📍' },
   ];
@@ -900,6 +1151,7 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
           {tab === 'subscribers' && <SubscribersTab subscriptions={initialSubscriptions} />}
           {tab === 'orders'      && <OrdersTab orders={initialOrders} />}
           {tab === 'content'     && <ContentTab content={content} setContent={setContent} dirty={dirty} setDirty={setDirty} busy={busy} setBusy={setBusy} setMsg={setMsg} />}
+          {tab === 'varieties'   && <VarietiesTab />}
           {tab === 'plans'       && <PlansTab plans={plans} setPlans={setPlans} busy={busy} setBusy={setBusy} setMsg={setMsg} />}
           {tab === 'pincodes'    && <PincodesTab pincodes={pincodes} setPincodes={setPincodes} busy={busy} setBusy={setBusy} setMsg={setMsg} />}
         </main>
