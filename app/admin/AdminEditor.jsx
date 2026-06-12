@@ -1521,47 +1521,50 @@ function SundayPackingTab({ subscriptions, stats }) {
     return '#555';
   }
 
+  const dateLong = new Date(nextSunday + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  const totalGrams = single * 100 + couple * 200 + family * 400;
+  const audienceRows = [
+    { key: 'single', label: 'Single', count: single, per: '25g', total: '100g', color: '#3d6b2e', bg: '#eef5e6', icon: '🧑' },
+    { key: 'couple', label: 'Couple', count: couple, per: '50g', total: '200g', color: '#2e4a8a', bg: '#e8f0ff', icon: '👫' },
+    { key: 'family', label: 'Family', count: family, per: '100g', total: '400g', color: '#8a5a2e', bg: '#fff4e6', icon: '👨‍👩‍👧‍👦' },
+  ];
+
   return (
-    <div style={{ maxWidth: 900 }}>
-      {/* Date header */}
-      <div style={{ background: '#1a2e1a', borderRadius: 14, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#7ab55c', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>Next Delivery</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#fff' }}>
-            Sunday, {new Date(nextSunday + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </div>
+    <div className="sunday-tab" style={{ maxWidth: 900 }}>
+      {/* Hero card */}
+      <div className="sunday-hero">
+        <div className="sunday-hero-top">
+          <div className="sunday-hero-label">📦 Next Delivery</div>
+          <span className="sunday-hero-count">
+            <strong>{delivering.length}</strong>
+            <span>box{delivering.length !== 1 ? 'es' : ''}</span>
+          </span>
         </div>
-        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
-          <div>
-            <div style={{ fontSize: 36, fontWeight: 900, color: '#7ab55c', lineHeight: 1 }}>{delivering.length}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>boxes to pack</div>
-          </div>
-          <button
-            onClick={printAddressLabels}
-            disabled={delivering.length === 0}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#7ab55c', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: delivering.length === 0 ? 'not-allowed' : 'pointer', opacity: delivering.length === 0 ? 0.5 : 1, letterSpacing: 0.3 }}
-          >
-            🖨️ Print Labels
-          </button>
-        </div>
+        <h1 className="sunday-hero-date">Sunday, {dateLong}</h1>
+        <button
+          onClick={printAddressLabels}
+          disabled={delivering.length === 0}
+          className="sunday-hero-print"
+        >
+          🖨️ Print Address Labels
+        </button>
       </div>
 
-      {/* Packing summary */}
-      <div style={{ marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>Packing Summary</h3>
-        <div className="admin-pack-grid">
-          {[
-            { label: 'Single', count: single, desc: '4 varieties · 25g each · 100g total', bg: '#eef5e6', color: '#3d6b2e', icon: '🧑' },
-            { label: 'Couple', count: couple, desc: '4 varieties · 50g each · 200g total', bg: '#e8f0ff', color: '#2e4a8a', icon: '👫' },
-            { label: 'Family', count: family, desc: '4 varieties · 100g each · 400g total', bg: '#fff4e6', color: '#8a5a2e', icon: '👨‍👩‍👧‍👦' },
-          ].map(({ label, count, desc, bg, color, icon }) => (
-            <div key={label} style={{ background: bg, borderRadius: 12, padding: '16px 20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <span style={{ fontSize: 20 }}>{icon}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</span>
+      {/* Packing summary — compact rows */}
+      <div className="sunday-section">
+        <div className="sunday-section-head">
+          <h3>Packing Summary</h3>
+          {totalGrams > 0 && <span className="sunday-total">{totalGrams >= 1000 ? `${(totalGrams / 1000).toFixed(1)} kg` : `${totalGrams}g`} total</span>}
+        </div>
+        <div className="sunday-pack-rows">
+          {audienceRows.map(({ key, label, count, per, total, color, bg, icon }) => (
+            <div key={key} className={`sunday-pack-row${count === 0 ? ' sunday-pack-row--empty' : ''}`} style={{ '--row-bg': bg, '--row-color': color }}>
+              <span className="sunday-pack-icon">{icon}</span>
+              <div className="sunday-pack-body">
+                <div className="sunday-pack-label">{label}</div>
+                <div className="sunday-pack-sub">4 varieties · {per} each · {total} per box</div>
               </div>
-              <div style={{ fontSize: 36, fontWeight: 900, color, lineHeight: 1 }}>{count}</div>
-              <div style={{ fontSize: 11, color, opacity: 0.7, marginTop: 4 }}>{desc}</div>
+              <div className="sunday-pack-count">{count}</div>
             </div>
           ))}
         </div>
