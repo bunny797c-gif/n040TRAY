@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // Editable sections — matches what page.jsx actually reads via t()
 const SECTION_DEFS = [
@@ -458,8 +459,7 @@ function SubscribersTab({ subscriptions }) {
 }
 
 // ── Orders Tab ────────────────────────────────────────────────────────────
-function OrdersTab({ orders: initialOrders }) {
-  const [orders, setOrders] = useState(initialOrders);
+function OrdersTab({ orders, setOrders, onRefresh }) {
   const [filter, setFilter] = useState('all');
   const [msg, setMsg] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -479,6 +479,7 @@ function OrdersTab({ orders: initialOrders }) {
       setMsg({ type: 'error', text: 'Failed to cancel order.' });
     } else {
       setMsg({ type: 'ok', text: `Order cancelled.` });
+      onRefresh();
     }
     setTimeout(() => setMsg(null), 3000);
   }
@@ -495,6 +496,7 @@ function OrdersTab({ orders: initialOrders }) {
       setMsg({ type: 'error', text: 'Failed to delete order.' });
     } else {
       setMsg({ type: 'ok', text: 'Order deleted.' });
+      onRefresh();
     }
     setTimeout(() => setMsg(null), 3000);
   }
@@ -1424,6 +1426,7 @@ function SundayPackingTab({ subscriptions, stats }) {
 
 // ── Main Admin Editor ─────────────────────────────────────────────────────
 export default function AdminEditor({ initialContent, initialPlans, initialPincodes, initialSubscriptions, initialOrders, stats, adminEmail }) {
+  const router = useRouter();
   const [tab, setTab] = useState('overview');
   const [content, setContent] = useState(() => {
     const map = {};
@@ -1432,6 +1435,7 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
   });
   const [plans, setPlans] = useState(initialPlans);
   const [pincodes, setPincodes] = useState(initialPincodes);
+  const [orders, setOrders] = useState(initialOrders);
   const [dirty, setDirty] = useState({});
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -1469,8 +1473,14 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
           <span style={{ fontSize: 20 }}>🌱</span>
           <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 0.3 }}>№40 TRAY — Admin</span>
         </div>
-        <div style={{ display: 'flex', gap: 20, alignItems: 'center', fontSize: 13 }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 13 }}>
           <span style={{ color: '#7ab55c', fontWeight: 500 }}>{adminEmail}</span>
+          <button
+            onClick={() => router.refresh()}
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#c8e6b0', fontSize: 12, fontWeight: 700, padding: '6px 12px', cursor: 'pointer', letterSpacing: 0.3 }}
+          >
+            ↻ Refresh
+          </button>
           <Link href="/" target="_blank" style={{ color: '#c8e6b0', fontWeight: 700, textDecoration: 'none', fontSize: 12 }}>VIEW SITE ↗</Link>
         </div>
       </div>
@@ -1504,10 +1514,10 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
             </div>
           )}
 
-          {tab === 'overview'    && <OverviewTab stats={stats} subscriptions={initialSubscriptions} orders={initialOrders} />}
+          {tab === 'overview'    && <OverviewTab stats={stats} subscriptions={initialSubscriptions} orders={orders} />}
           {tab === 'sunday'      && <SundayPackingTab subscriptions={initialSubscriptions} stats={stats} />}
           {tab === 'subscribers' && <SubscribersTab subscriptions={initialSubscriptions} />}
-          {tab === 'orders'      && <OrdersTab orders={initialOrders} />}
+          {tab === 'orders'      && <OrdersTab orders={orders} setOrders={setOrders} onRefresh={() => router.refresh()} />}
           {tab === 'content'     && <ContentTab content={content} setContent={setContent} dirty={dirty} setDirty={setDirty} busy={busy} setBusy={setBusy} setMsg={setMsg} />}
           {tab === 'varieties'   && <VarietiesTab />}
           {tab === 'plans'       && <PlansTab plans={plans} setPlans={setPlans} busy={busy} setBusy={setBusy} setMsg={setMsg} />}
