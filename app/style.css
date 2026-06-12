@@ -2355,8 +2355,9 @@ body {
 
 .footer-bottom .hero-logo-img {
     mix-blend-mode: normal;
-    filter: invert(1);
-    opacity: 0.45;
+    /* force the logo to pure white, then dim to the legal-links grey */
+    filter: brightness(0) invert(1);
+    opacity: 0.3;
 }
 
 .footer-legal {
