@@ -21,8 +21,8 @@ export default async function SubscriptionPage() {
       <section className="sub-hero">
         <div className="sub-hero-inner">
           <p className="section-label">SUBSCRIPTION PLANS</p>
-          <h1 className="sub-hero-title">Choose a Plan That<br/>Fits Your Life.</h1>
-          <p className="sub-hero-subtitle">Fresh microgreens delivered every Sunday. Pause anytime when you travel — no deliveries are lost. Save more with longer plans.</p>
+          <h1 className="sub-hero-title">4 Varieties.<br/>Every Sunday.</h1>
+          <p className="sub-hero-subtitle">Each delivery is a curated mix — 4 different microgreens, freshly harvested that morning. Try new varieties every week without ordering in bulk. Pause anytime.</p>
         </div>
       </section>
 
@@ -35,7 +35,7 @@ export default async function SubscriptionPage() {
           <div className="compare-grid">
             {[
               ['🚚', 'Free Home Delivery', 'No hidden fees. Every box arrives at your door at no extra cost.'],
-              ['🌱', 'Variety Rotation', 'Change varieties each cycle. Try sunflower one week, broccoli the next.'],
+              ['🌱', '4 Varieties Per Box', 'Each delivery has 4 different microgreens. The only way to get a mix — you can\'t order 25g of each individually.'],
               ['⏭️', 'Skip This Sunday', "Out for the weekend? Skip just one delivery — the next one comes the following Sunday like normal."],
               ['⏸️', 'Pause Indefinitely', "Long trip? Pause anytime Mon–Fri. Deliveries are saved — not lost — and resume the Sunday after you come back."],
               ['🔒', 'Locked-in Pricing', 'Your subscription price is fixed for its duration — no surprises.'],
