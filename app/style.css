@@ -2343,6 +2343,22 @@ body {
     color: rgba(255,255,255,0.3);
 }
 
+/* №40 logo in the copyright line: the PNG is black (multiply blend suits the
+   light hero only) — invert it to white and dim it to match the text colour. */
+.footer-bottom .brand-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    vertical-align: middle;
+    margin: 0 2px;
+}
+
+.footer-bottom .hero-logo-img {
+    mix-blend-mode: normal;
+    filter: invert(1);
+    opacity: 0.45;
+}
+
 .footer-legal {
     display: flex;
     gap: 24px;
