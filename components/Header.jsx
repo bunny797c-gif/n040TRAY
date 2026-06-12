@@ -16,6 +16,12 @@ export default function Header() {
   const supabase = createClient();
 
   useEffect(() => {
+    function handleOpenCart() { setCartOpen(true); }
+    window.addEventListener('open-cart', handleOpenCart);
+    return () => window.removeEventListener('open-cart', handleOpenCart);
+  }, []);
+
+  useEffect(() => {
     async function loadUser() {
       const { data } = await supabase.auth.getUser();
       const u = data.user;

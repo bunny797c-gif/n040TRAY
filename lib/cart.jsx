@@ -23,24 +23,23 @@ export function CartProvider({ children }) {
   }, [items]);
 
   function addItem(product) {
+    const key = product.cartKey || product.name;
     setItems((prev) => {
-      const existing = prev.find((i) => i.name === product.name);
+      const existing = prev.find((i) => (i.cartKey || i.name) === key);
       if (existing) {
-        return prev.map((i) =>
-          i.name === product.name ? { ...i, qty: i.qty + 1 } : i
-        );
+        return prev.map((i) => (i.cartKey || i.name) === key ? { ...i, qty: i.qty + 1 } : i);
       }
-      return [...prev, { ...product, qty: 1 }];
+      return [...prev, { ...product, cartKey: key, qty: 1 }];
     });
   }
 
-  function removeItem(name) {
-    setItems((prev) => prev.filter((i) => i.name !== name));
+  function removeItem(key) {
+    setItems((prev) => prev.filter((i) => (i.cartKey || i.name) !== key));
   }
 
-  function updateQty(name, qty) {
-    if (qty < 1) { removeItem(name); return; }
-    setItems((prev) => prev.map((i) => i.name === name ? { ...i, qty } : i));
+  function updateQty(key, qty) {
+    if (qty < 1) { removeItem(key); return; }
+    setItems((prev) => prev.map((i) => (i.cartKey || i.name) === key ? { ...i, qty } : i));
   }
 
   function clearCart() { setItems([]); }

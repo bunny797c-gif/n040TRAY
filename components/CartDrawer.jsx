@@ -11,8 +11,7 @@ async function safeJson(res) {
   try { return await res.json(); } catch { return { error: `Server error (${res.status})` }; }
 }
 
-// Price per 100g tray (one-time / à la carte)
-const ITEM_PRICE = 249;
+const DEFAULT_PRICE = 249; // fallback if item has no price
 
 const DURATION_LABEL = {
   monthly: 'Monthly',
@@ -145,7 +144,7 @@ export default function CartDrawer({ open, onClose }) {
 
     // Build a single composite item description for the order
     const itemsDesc = items.map((i) => `${i.name} x${i.qty}`).join(', ');
-    const totalAmt = items.reduce((s, i) => s + i.qty * ITEM_PRICE, 0);
+    const totalAmt = items.reduce((s, i) => s + i.qty * (i.price || DEFAULT_PRICE), 0);
 
     try {
       const res = await fetch('/api/cart/create-order', {
@@ -193,7 +192,7 @@ export default function CartDrawer({ open, onClose }) {
     }
   }
 
-  const subtotal = items.reduce((s, i) => s + i.qty * ITEM_PRICE, 0);
+  const subtotal = items.reduce((s, i) => s + i.qty * (i.price || DEFAULT_PRICE), 0);
   const isEmpty = items.length === 0;
 
   return (
@@ -228,24 +227,27 @@ export default function CartDrawer({ open, onClose }) {
               ) : (
                 <>
                   <ul className="cart-items">
-                    {items.map((item) => (
-                      <li key={item.name} className="cart-item">
+                    {items.map((item) => {
+                      const key = item.cartKey || item.name;
+                      return (
+                      <li key={key} className="cart-item">
                         <span className="cart-item-emoji">{item.emoji}</span>
                         <div className="cart-item-info">
                           <strong>{item.name}</strong>
-                          <span className="cart-item-taste">{item.taste}</span>
+                          <span className="cart-item-taste">{item.packLabel || item.taste}</span>
                         </div>
                         <div className="cart-item-right">
                           <div className="cart-qty-row">
-                            <button className="cart-qty-btn" onClick={() => updateQty(item.name, item.qty - 1)}>−</button>
+                            <button className="cart-qty-btn" onClick={() => updateQty(key, item.qty - 1)}>−</button>
                             <span className="cart-qty-val">{item.qty}</span>
-                            <button className="cart-qty-btn" onClick={() => updateQty(item.name, item.qty + 1)}>+</button>
+                            <button className="cart-qty-btn" onClick={() => updateQty(key, item.qty + 1)}>+</button>
                           </div>
-                          <span className="cart-item-price">{inr(item.qty * ITEM_PRICE)}</span>
-                          <button className="cart-remove-btn" onClick={() => removeItem(item.name)} aria-label="Remove">✕</button>
+                          <span className="cart-item-price">{inr(item.qty * (item.price || DEFAULT_PRICE))}</span>
+                          <button className="cart-remove-btn" onClick={() => removeItem(key)} aria-label="Remove">✕</button>
                         </div>
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
 
                   <div className="cart-subtotal-row">
@@ -361,9 +363,9 @@ export default function CartDrawer({ open, onClose }) {
               <div className="cart-order-summary">
                 <div className="cart-summary-title">Order Summary</div>
                 {items.map((i) => (
-                  <div key={i.name} className="cart-summary-row">
-                    <span>{i.emoji} {i.name} × {i.qty}</span>
-                    <span>{inr(i.qty * ITEM_PRICE)}</span>
+                  <div key={i.cartKey || i.name} className="cart-summary-row">
+                    <span>{i.emoji} {i.name}{i.packLabel ? ` (${i.packLabel})` : ''} × {i.qty}</span>
+                    <span>{inr(i.qty * (i.price || DEFAULT_PRICE))}</span>
                   </div>
                 ))}
                 <div className="cart-summary-row cart-summary-total">
