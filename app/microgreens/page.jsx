@@ -3,7 +3,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MicrogreensPageClient from './MicrogreensPageClient';
 
-export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Microgreens — №40 TRAY',
