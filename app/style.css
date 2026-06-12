@@ -3024,3 +3024,64 @@ html:not(.js-reveal) [data-reveal] {
         transition: none !important;
     }
 }
+
+/* ── Huly-style motion layer ── */
+.hero-word {
+    display: inline-block;
+    will-change: transform, opacity;
+}
+
+.hero-title { overflow: hidden; }
+
+.hero-bg { position: relative; overflow: hidden; }
+
+.hero-leaves {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero-leaf {
+    position: absolute;
+    fill: var(--primary-light);
+}
+
+.hero-bg .hero { position: relative; z-index: 1; }
+
+/* Ambient drifting glow on dark + CTA sections */
+.nutrition-section,
+.cta-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.nutrition-section::before,
+.cta-section::before {
+    content: '';
+    position: absolute;
+    width: 70vmax;
+    height: 70vmax;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(122, 181, 92, 0.16) 0%, transparent 60%);
+    top: -25vmax;
+    left: -15vmax;
+    pointer-events: none;
+    animation: ambient-drift 18s ease-in-out infinite alternate;
+}
+
+.nutrition-section > *,
+.cta-section > * {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes ambient-drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(30vmax, 12vmax) scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nutrition-section::before,
+    .cta-section::before { animation: none; }
+}

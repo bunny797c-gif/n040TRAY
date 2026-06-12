@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import HomeScripts from './HomeScripts';
 import MicrogreensGrid from './MicrogreensGrid';
 import { WhyChooseUs, OurStandards, HowItWorks, WhoWeServe } from './HomeSections';
+import PremiumMotion from './PremiumMotion';
 import { getSiteContent, t } from '@/lib/content';
 
 export const revalidate = 0;
@@ -210,6 +211,7 @@ export default async function HomePage() {
 
       <Footer />
       <HomeScripts />
+      <PremiumMotion />
     </>
   );
 }
