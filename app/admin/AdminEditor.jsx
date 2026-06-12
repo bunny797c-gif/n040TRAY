@@ -884,7 +884,15 @@ function VarietiesTab() {
     setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, show_on_home: next } : x));
     const ok = await patch(v.id, { show_on_home: next });
     if (!ok) setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, show_on_home: v.show_on_home } : x));
-    else setMsg({ type: 'ok', text: `${v.name} ${next ? 'added to' : 'removed from'} home page.` });
+    else setMsg({ type: 'ok', text: `${v.name} ${next ? 'added to catalog ✅' : 'removed from catalog'}.` });
+  }
+
+  async function toggleOos(v) {
+    const next = !v.out_of_stock;
+    setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, out_of_stock: next } : x));
+    const ok = await patch(v.id, { out_of_stock: next });
+    if (!ok) setVarieties((prev) => prev.map((x) => x.id === v.id ? { ...x, out_of_stock: v.out_of_stock } : x));
+    else setMsg({ type: 'ok', text: `${v.name} marked as ${next ? 'out of stock ✗' : 'in stock ✅'}.` });
   }
 
   async function uploadImage(v, file) {
@@ -913,7 +921,10 @@ function VarietiesTab() {
           🌱 {varieties.length} varieties in catalog
         </div>
         <div style={{ background: '#fff4e0', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 700, color: '#9a6200' }}>
-          🏠 {visibleOnHome} showing on home page
+          ✅ {visibleOnHome} showing in catalog
+        </div>
+        <div style={{ background: '#fdecea', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 700, color: '#b0281e' }}>
+          ✗ {varieties.filter((v) => v.out_of_stock).length} out of stock
         </div>
         {msg && (
           <div style={{ flex: 1, padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, background: msg.type === 'error' ? '#fdecea' : '#eef7e8', color: msg.type === 'error' ? '#b0281e' : '#3d6b2e', border: `1px solid ${msg.type === 'error' ? '#f5c6c3' : '#c3e6b0'}` }}>
@@ -944,7 +955,7 @@ function VarietiesTab() {
           onClick={() => setShowOnlyHome((x) => !x)}
           style={{ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: showOnlyHome ? '#4a7c59' : '#f0f0ea', color: showOnlyHome ? '#fff' : '#666' }}
         >
-          🏠 Home only
+          ✅ Active only
         </button>
         <span style={{ fontSize: 13, color: '#aaa', marginLeft: 4 }}>{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
       </div>
@@ -956,7 +967,7 @@ function VarietiesTab() {
           const isExpanded = expandedId === v.id;
           const isUploading = uploading === v.id;
           return (
-            <div key={v.id} style={{ background: '#fff', borderRadius: 16, border: `2px solid ${v.show_on_home ? '#7ab55c' : '#eee'}`, overflow: 'hidden', boxShadow: v.show_on_home ? '0 2px 12px rgba(74,124,89,0.12)' : '0 1px 4px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}>
+            <div key={v.id} style={{ background: '#fff', borderRadius: 16, border: `2px solid ${v.out_of_stock ? '#f5c6a0' : v.show_on_home ? '#7ab55c' : '#eee'}`, overflow: 'hidden', boxShadow: v.show_on_home ? '0 2px 12px rgba(74,124,89,0.12)' : '0 1px 4px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}>
 
               {/* Image area */}
               <div style={{ height: 140, background: '#f7fbf3', position: 'relative', overflow: 'hidden' }}>
@@ -971,12 +982,19 @@ function VarietiesTab() {
                   {isUploading ? '⏳ Uploading…' : '📷 Upload'}
                   <input type="file" accept="image/*" style={{ display: 'none' }} disabled={isUploading} onChange={(e) => uploadImage(v, e.target.files[0])} />
                 </label>
-                {/* Show on home badge */}
-                {v.show_on_home && (
-                  <div style={{ position: 'absolute', top: 8, left: 8, background: '#7ab55c', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 10, letterSpacing: 0.3 }}>
-                    🏠 ON HOME
-                  </div>
-                )}
+                {/* Status badges */}
+                <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {v.show_on_home && (
+                    <div style={{ background: '#7ab55c', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 10, letterSpacing: 0.3 }}>
+                      ✅ IN CATALOG
+                    </div>
+                  )}
+                  {v.out_of_stock && (
+                    <div style={{ background: '#e07b39', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 10, letterSpacing: 0.3 }}>
+                      ✗ OUT OF STOCK
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Card body */}
@@ -993,23 +1011,26 @@ function VarietiesTab() {
 
                 <p style={{ margin: '0 0 10px', fontSize: 12, color: '#666', fontStyle: 'italic' }}>✦ {v.taste}</p>
 
-                {/* Show on home toggle */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>Show on home page</span>
-                  <button
-                    onClick={() => toggleHome(v)}
-                    style={{
-                      width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-                      background: v.show_on_home ? '#7ab55c' : '#ddd',
-                      position: 'relative', transition: 'background 0.2s',
-                    }}
-                  >
-                    <span style={{
-                      position: 'absolute', top: 3, left: v.show_on_home ? 23 : 3,
-                      width: 18, height: 18, borderRadius: '50%', background: '#fff',
-                      transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    }} />
-                  </button>
+                {/* Toggles */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10, background: '#f9f9f6', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#444' }}>Show in catalog</span>
+                    <button
+                      onClick={() => toggleHome(v)}
+                      style={{ width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: v.show_on_home ? '#7ab55c' : '#ddd', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+                    >
+                      <span style={{ position: 'absolute', top: 3, left: v.show_on_home ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#444' }}>Out of stock</span>
+                    <button
+                      onClick={() => toggleOos(v)}
+                      style={{ width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: v.out_of_stock ? '#e07b39' : '#ddd', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+                    >
+                      <span style={{ position: 'absolute', top: 3, left: v.out_of_stock ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Grow time + intake */}

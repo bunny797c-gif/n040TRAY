@@ -39,7 +39,7 @@ export default function Header() {
 
   const navItems = [
     { label: 'SUBSCRIPTION PLANS', href: '/subscription', ariaLabel: 'Subscription Plans', rotation: -6, hoverStyles: { bgColor: '#4a7c59', textColor: '#ffffff' } },
-    { label: 'MICROGREENS', href: '/#microgreens', ariaLabel: 'Microgreens', rotation: 6, hoverStyles: { bgColor: '#7ab55c', textColor: '#ffffff' } },
+    { label: 'MICROGREENS', href: '/microgreens', ariaLabel: 'Microgreens', rotation: 6, hoverStyles: { bgColor: '#7ab55c', textColor: '#ffffff' } },
     { label: 'SEEDS', href: '/#', ariaLabel: 'Seeds', rotation: -6, hoverStyles: { bgColor: '#a8c98c', textColor: '#ffffff' } },
   ];
 
@@ -57,7 +57,7 @@ export default function Header() {
             ) : (
               <>
                 <Link href="/subscription">SUBSCRIPTION PLANS</Link>
-                <Link href="/#microgreens">MICROGREENS</Link>
+                <Link href="/microgreens">MICROGREENS</Link>
                 <Link href="/#">SEEDS</Link>
                 {user ? (
                   <Link href="/account">MY ACCOUNT</Link>

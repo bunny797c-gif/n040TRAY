@@ -22,7 +22,7 @@ export async function PATCH(req) {
   const { id, ...updates } = body;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  const allowed = ['image_url', 'show_on_home', 'home_order'];
+  const allowed = ['image_url', 'show_on_home', 'home_order', 'out_of_stock'];
   const payload = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)));
   if (!Object.keys(payload).length) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
 
