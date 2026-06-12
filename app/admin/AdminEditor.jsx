@@ -1162,6 +1162,175 @@ function VarietiesTab() {
   );
 }
 
+// ── Sunday Packing Tab ───────────────────────────────────────────────────
+function SundayPackingTab({ subscriptions, stats }) {
+  const nextSunday = stats.nextSundayStr;
+
+  // Split into delivering vs skipped/paused
+  const delivering = subscriptions.filter(
+    (s) => s.status === 'active' && s.next_delivery_date === nextSunday
+  );
+  const paused = subscriptions.filter((s) => s.status === 'paused');
+  const notThisSunday = subscriptions.filter(
+    (s) => s.status === 'active' && s.next_delivery_date !== nextSunday
+  );
+
+  // Packing summary counts
+  const single = delivering.filter((s) => s.plans?.audience === 'single').length;
+  const couple = delivering.filter((s) => s.plans?.audience === 'couple').length;
+  const family = delivering.filter((s) => s.plans?.audience === 'family').length;
+
+  // Group by city for routing
+  const byCity = delivering.reduce((acc, s) => {
+    const city = s.addresses?.city || 'Unknown';
+    if (!acc[city]) acc[city] = [];
+    acc[city].push(s);
+    return acc;
+  }, {});
+
+  function packLabel(audience) {
+    if (audience === 'single') return '4 varieties · 25g each';
+    if (audience === 'couple') return '4 varieties · 50g each';
+    if (audience === 'family') return '4 varieties · 100g each';
+    return '—';
+  }
+
+  function packBg(audience) {
+    if (audience === 'single') return '#eef5e6';
+    if (audience === 'couple') return '#e8f0ff';
+    if (audience === 'family') return '#fff4e6';
+    return '#f5f5f0';
+  }
+
+  function packColor(audience) {
+    if (audience === 'single') return '#3d6b2e';
+    if (audience === 'couple') return '#2e4a8a';
+    if (audience === 'family') return '#8a5a2e';
+    return '#555';
+  }
+
+  return (
+    <div style={{ maxWidth: 900 }}>
+      {/* Date header */}
+      <div style={{ background: '#1a2e1a', borderRadius: 14, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#7ab55c', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>Next Delivery</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#fff' }}>
+            Sunday, {new Date(nextSunday + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 36, fontWeight: 900, color: '#7ab55c' }}>{delivering.length}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>boxes to pack</div>
+        </div>
+      </div>
+
+      {/* Packing summary */}
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>Packing Summary</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          {[
+            { label: 'Single', count: single, desc: '4 varieties · 25g each · 100g total', bg: '#eef5e6', color: '#3d6b2e', icon: '🧑' },
+            { label: 'Couple', count: couple, desc: '4 varieties · 50g each · 200g total', bg: '#e8f0ff', color: '#2e4a8a', icon: '👫' },
+            { label: 'Family', count: family, desc: '4 varieties · 100g each · 400g total', bg: '#fff4e6', color: '#8a5a2e', icon: '👨‍👩‍👧‍👦' },
+          ].map(({ label, count, desc, bg, color, icon }) => (
+            <div key={label} style={{ background: bg, borderRadius: 12, padding: '16px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 20 }}>{icon}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</span>
+              </div>
+              <div style={{ fontSize: 36, fontWeight: 900, color, lineHeight: 1 }}>{count}</div>
+              <div style={{ fontSize: 11, color, opacity: 0.7, marginTop: 4 }}>{desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Delivery list grouped by city */}
+      {delivering.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 14, border: '1px solid #eee' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+          <p style={{ fontSize: 15, color: '#888' }}>No deliveries scheduled for this Sunday.</p>
+        </div>
+      ) : (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Delivery List — {delivering.length} box{delivering.length !== 1 ? 'es' : ''} · grouped by area
+          </h3>
+          {Object.entries(byCity).sort().map(([city, subs]) => (
+            <div key={city} style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#4a7c59', textTransform: 'uppercase', letterSpacing: 0.8, padding: '6px 0', borderBottom: '2px solid #e8f0e0', marginBottom: 8 }}>
+                📍 {city} — {subs.length} box{subs.length !== 1 ? 'es' : ''}
+              </div>
+              {subs.map((s, i) => {
+                const addr = s.addresses;
+                const name = addr?.full_name || s.profiles?.full_name || '—';
+                const phone = addr?.phone || '—';
+                const line = [addr?.line1, addr?.line2].filter(Boolean).join(', ');
+                const pincode = addr?.pincode || '';
+                const audience = s.plans?.audience;
+                return (
+                  <div key={s.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '12px 16px', background: i % 2 === 0 ? '#fff' : '#fafaf7', borderRadius: 10, marginBottom: 4, border: '1px solid #f0f0ea' }}>
+                    {/* Box number */}
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: packBg(audience), color: packColor(audience), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0, marginTop: 2 }}>
+                      {i + 1}
+                    </div>
+                    {/* Customer info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 700, fontSize: 14, color: '#1a2e1a' }}>{name}</span>
+                        <span style={{ background: packBg(audience), color: packColor(audience), fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 10, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                          {audience}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 12, color: '#666', marginTop: 3 }}>📞 {phone}</div>
+                      {line && <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{line}{pincode ? `, ${pincode}` : ''}</div>}
+                    </div>
+                    {/* What to pack */}
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 11, color: '#aaa', marginBottom: 2 }}>Pack</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: packColor(audience), background: packBg(audience), padding: '4px 10px', borderRadius: 8 }}>
+                        {packLabel(audience)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Paused / skipping this week */}
+      {(paused.length > 0 || notThisSunday.length > 0) && (
+        <div>
+          <h3 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Not Delivering This Sunday
+          </h3>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #eee', overflow: 'hidden' }}>
+            {[...paused, ...notThisSunday].map((s, i) => {
+              const name = s.addresses?.full_name || s.profiles?.full_name || '—';
+              const reason = s.status === 'paused' ? '⏸ Paused' : `⏭ Next: ${fmtDate(s.next_delivery_date)}`;
+              return (
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', background: i % 2 === 0 ? '#fff' : '#fafaf7', borderBottom: '1px solid #f0f0ea' }}>
+                  <span style={{ fontSize: 16 }}>{s.status === 'paused' ? '⏸️' : '⏭️'}</span>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontWeight: 600, color: '#555', fontSize: 13 }}>{name}</span>
+                    <span style={{ marginLeft: 8, fontSize: 12, color: '#999' }}>{s.plans?.name}</span>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: s.status === 'paused' ? '#5c7aaa' : '#888', background: s.status === 'paused' ? '#e8edf5' : '#f5f5f0', padding: '3px 10px', borderRadius: 8 }}>
+                    {reason}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Admin Editor ─────────────────────────────────────────────────────
 export default function AdminEditor({ initialContent, initialPlans, initialPincodes, initialSubscriptions, initialOrders, stats, adminEmail }) {
   const [tab, setTab] = useState('overview');
@@ -1192,6 +1361,7 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
 
   const TABS = [
     { id: 'overview',    label: 'Overview',       icon: '📊' },
+    { id: 'sunday',      label: 'This Sunday',    icon: '📦' },
     { id: 'subscribers', label: 'Subscribers',    icon: '🌱' },
     { id: 'orders',      label: 'Orders',          icon: '💳' },
     { id: 'content',     label: 'Page Content',    icon: '✏️' },
@@ -1244,6 +1414,7 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
           )}
 
           {tab === 'overview'    && <OverviewTab stats={stats} subscriptions={initialSubscriptions} orders={initialOrders} />}
+          {tab === 'sunday'      && <SundayPackingTab subscriptions={initialSubscriptions} stats={stats} />}
           {tab === 'subscribers' && <SubscribersTab subscriptions={initialSubscriptions} />}
           {tab === 'orders'      && <OrdersTab orders={initialOrders} />}
           {tab === 'content'     && <ContentTab content={content} setContent={setContent} dirty={dirty} setDirty={setDirty} busy={busy} setBusy={setBusy} setMsg={setMsg} />}

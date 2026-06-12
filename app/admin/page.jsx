@@ -34,7 +34,7 @@ export default async function AdminPage() {
     supabase.from('serviceable_pincodes').select('*').order('pincode'),
     supabase
       .from('subscriptions')
-      .select('*, plans(name, audience, price_inr, duration), profiles(email, full_name)')
+      .select('*, plans(name, audience, price_inr, duration), profiles(email, full_name), addresses(full_name, phone, line1, line2, city, state, pincode)')
       .order('created_at', { ascending: false })
       .limit(200),
     supabase
