@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 
 // Editable sections — matches what page.jsx actually reads via t()
@@ -504,11 +504,49 @@ function OrdersTab({ orders }) {
   );
 }
 
-// ── Content Tab — visual page editor ─────────────────────────────────────
-function ContentTab({ content, setContent, dirty, setDirty, busy, setBusy, setMsg }) {
-  const [selectedId, setSelectedId] = useState('hero');
+// All page sections in order — editable ones link to a SECTION_DEF
+const ALL_SECTIONS = [
+  { num: 1,  domId: 's-hero',         label: 'Hero',           icon: '🏠', defId: 'hero' },
+  { num: 2,  domId: 's-banner',        label: 'Banner',         icon: '🖼️', defId: null },
+  { num: 3,  domId: 's-why-micro',     label: 'Why Microgreens',icon: '💡', defId: null },
+  { num: 4,  domId: 's-why-choose',    label: 'Why Choose Us',  icon: '✅', defId: null },
+  { num: 5,  domId: 's-varieties',     label: 'Varieties',      icon: '🌱', defId: 'varieties' },
+  { num: 6,  domId: 's-standards',     label: 'Our Standards',  icon: '🏅', defId: null },
+  { num: 7,  domId: 's-nutrition',     label: 'Nutrition',      icon: '🧬', defId: null },
+  { num: 8,  domId: 's-how-it-works',  label: 'How It Works',   icon: '⚙️', defId: null },
+  { num: 9,  domId: 's-who-we-serve',  label: 'Who We Serve',   icon: '👥', defId: null },
+  { num: 10, domId: 's-testimonials',  label: 'Testimonials',   icon: '⭐', defId: null },
+  { num: 11, domId: 's-faq',           label: 'FAQ',            icon: '❓', defId: null },
+  { num: 12, domId: 's-cta',           label: 'Final CTA',      icon: '📣', defId: 'cta' },
+];
 
-  const selectedDef = SECTION_DEFS.find((s) => s.id === selectedId);
+// ── Content Tab — iframe page editor ─────────────────────────────────────
+function ContentTab({ content, setContent, dirty, setDirty, busy, setBusy, setMsg }) {
+  const [selected, setSelected] = useState(ALL_SECTIONS[0]);
+  const iframeRef = useRef(null);
+  const iframeReady = useRef(false);
+
+  const selectedDef = selected.defId ? SECTION_DEFS.find((s) => s.id === selected.defId) : null;
+
+  // Scroll iframe to the section when ready / when selection changes
+  const scrollToSection = useCallback((domId) => {
+    try {
+      const iframe = iframeRef.current;
+      if (!iframe || !iframe.contentDocument) return;
+      const el = iframe.contentDocument.getElementById(domId);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch {}
+  }, []);
+
+  function handleIframeLoad() {
+    iframeReady.current = true;
+    scrollToSection(selected.domId);
+  }
+
+  function selectSection(sec) {
+    setSelected(sec);
+    scrollToSection(sec.domId);
+  }
 
   function setValue(sec, key, value, type) {
     setContent((c) => ({ ...c, [`${sec}.${key}`]: { value, type } }));
@@ -529,142 +567,127 @@ function ContentTab({ content, setContent, dirty, setDirty, busy, setBusy, setMs
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 24, alignItems: 'start' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, margin: '-28px', height: 'calc(100vh - 56px)' }}>
 
-      {/* Left: Visual page map */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, position: 'sticky', top: 0 }}>
-        <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          Page Layout — click a section to edit
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 'calc(100vh - 180px)', overflowY: 'auto', paddingRight: 4 }}>
-          {PAGE_MAP.map((entry) => {
-            if (entry.type === 'editable') {
-              const def = SECTION_DEFS.find((s) => s.id === entry.id);
-              const isSelected = selectedId === entry.id;
-              return (
-                <div key={entry.id}
-                  onClick={() => setSelectedId(entry.id)}
-                  style={{
-                    cursor: 'pointer',
-                    borderRadius: 12,
-                    border: isSelected ? '2px solid #4a7c59' : '2px solid transparent',
-                    overflow: 'hidden',
-                    boxShadow: isSelected ? '0 0 0 3px rgba(74,124,89,0.15)' : '0 1px 4px rgba(0,0,0,0.06)',
-                    transition: 'border-color 0.15s, box-shadow 0.15s',
-                  }}>
-                  {/* Mini section preview */}
-                  <div style={{ pointerEvents: 'none', transform: 'scale(0.55)', transformOrigin: 'top left', width: '182%', marginBottom: '-80px' }}>
-                    {entry.id === 'hero'      && <HeroPreview content={content} />}
-                    {entry.id === 'varieties' && <VarietiesPreview content={content} />}
-                    {entry.id === 'cta'       && <CtaPreview content={content} />}
-                  </div>
-                  {/* Label bar */}
-                  <div style={{ background: isSelected ? '#4a7c59' : '#f0f5ec', padding: '7px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 13 }}>{def.icon}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: isSelected ? '#fff' : '#3d5a45' }}>{def.label}</span>
-                    <span style={{ marginLeft: 'auto', fontSize: 10, color: isSelected ? 'rgba(255,255,255,0.7)' : '#7ab55c', fontWeight: 600 }}>EDITABLE ✏️</span>
-                  </div>
-                </div>
-              );
-            } else {
-              const sec = STATIC_SECTIONS.find((s) => s.id === entry.id);
-              return (
-                <div key={entry.id} style={{ borderRadius: 12, border: '2px solid #f0f0ea', overflow: 'hidden', opacity: 0.8 }}>
-                  <div style={{ pointerEvents: 'none', transform: 'scale(0.55)', transformOrigin: 'top left', width: '182%', marginBottom: '-80px' }}>
-                    <StaticPreview section={sec} />
-                  </div>
-                  <div style={{ background: '#f7f7f4', padding: '7px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 13 }}>{sec.icon}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#888' }}>{sec.label}</span>
-                    <span style={{ marginLeft: 'auto', fontSize: 10, color: '#bbb', fontWeight: 600 }}>HARDCODED 🔒</span>
-                  </div>
-                </div>
-              );
-            }
-          })}
-        </div>
+      {/* Top: numbered section chips */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #eee', padding: '12px 20px', display: 'flex', gap: 6, overflowX: 'auto', flexShrink: 0, alignItems: 'center' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#bbb', textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap', marginRight: 6 }}>Sections:</span>
+        {ALL_SECTIONS.map((sec) => {
+          const isActive = selected.num === sec.num;
+          return (
+            <button
+              key={sec.num}
+              onClick={() => selectSection(sec)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '6px 12px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                whiteSpace: 'nowrap', fontSize: 12, fontWeight: 700,
+                background: isActive ? '#4a7c59' : sec.defId ? '#eef5e6' : '#f4f4f0',
+                color: isActive ? '#fff' : sec.defId ? '#3d5a45' : '#888',
+                outline: isActive ? '2px solid #4a7c59' : 'none',
+                outlineOffset: 2,
+                transition: 'all 0.15s',
+              }}>
+              <span style={{ background: isActive ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.08)', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{sec.num}</span>
+              <span>{sec.icon}</span>
+              <span>{sec.label}</span>
+              {sec.defId && <span style={{ fontSize: 9, opacity: 0.7 }}>✏️</span>}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Right: Edit panel */}
-      {selectedDef && (
-        <div>
-          {/* Live preview of selected section */}
-          <div style={{ marginBottom: 24 }}>
-            <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5 }}>Live Preview</p>
-            <div style={{ pointerEvents: 'none' }}>
-              {selectedId === 'hero'      && <HeroPreview content={content} />}
-              {selectedId === 'varieties' && <VarietiesPreview content={content} />}
-              {selectedId === 'cta'       && <CtaPreview content={content} />}
-            </div>
-          </div>
+      {/* Body: iframe left + edit panel right */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', flex: 1, overflow: 'hidden' }}>
 
-          {/* Edit fields */}
-          <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #eee' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-              <span style={{ fontSize: 20 }}>{selectedDef.icon}</span>
-              <div>
-                <h2 style={{ margin: 0, fontSize: 17, color: '#1a2e1a' }}>Edit: {selectedDef.label}</h2>
-                <p style={{ margin: 0, fontSize: 12, color: '#aaa' }}>Leave blank to use the site default shown in the preview.</p>
+        {/* Left: live site iframe */}
+        <div style={{ position: 'relative', borderRight: '1px solid #eee', background: '#f0f0ea' }}>
+          {/* Section highlight label overlay */}
+          <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10, background: '#1a2e1a', color: '#c8e6b0', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 20, pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>{selected.icon}</span>
+            <span>Section {selected.num}: {selected.label}</span>
+            {selected.defId
+              ? <span style={{ background: '#7ab55c', color: '#fff', fontSize: 9, padding: '1px 6px', borderRadius: 10 }}>EDITABLE</span>
+              : <span style={{ background: 'rgba(255,255,255,0.15)', fontSize: 9, padding: '1px 6px', borderRadius: 10 }}>VIEW ONLY</span>}
+          </div>
+          <iframe
+            ref={iframeRef}
+            src="/"
+            onLoad={handleIframeLoad}
+            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+            title="Site Preview"
+          />
+        </div>
+
+        {/* Right: edit panel */}
+        <div style={{ overflowY: 'auto', background: '#fafaf7', padding: 24 }}>
+          {selectedDef ? (
+            <>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                  <span style={{ fontSize: 22 }}>{selected.icon}</span>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1a2e1a' }}>Section {selected.num}: {selected.label}</h2>
+                    <p style={{ margin: 0, fontSize: 12, color: '#aaa' }}>Changes preview live on the site after saving.</p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedDef.fields.map((f) => {
+                const cur = content[`${selected.defId}.${f.key}`];
+                const val = cur?.value ?? '';
+                const isDirty = Boolean(dirty[`${selected.defId}.${f.key}`]);
+                return (
+                  <div key={f.key} style={{ marginBottom: 20 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+                      {f.key.replace(/_/g, ' ')}
+                      {isDirty && <span style={{ background: '#e07b39', color: '#fff', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 800 }}>UNSAVED</span>}
+                    </label>
+                    {f.hint && <p style={{ margin: '0 0 6px', fontSize: 11, color: '#aaa' }}>{f.hint}</p>}
+                    {selectedDef.defaults?.[f.key] && f.type !== 'image' && (
+                      <p style={{ margin: '0 0 6px', fontSize: 11, color: '#bbb' }}>Default: <em style={{ color: '#999' }}>{selectedDef.defaults[f.key]}</em></p>
+                    )}
+
+                    {f.type === 'image' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <input style={inputStyle} value={val} placeholder="Image URL (or upload below)"
+                          onChange={(e) => setValue(selected.defId, f.key, e.target.value, 'image')} />
+                        {val && <img src={val} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid #eee' }} />}
+                        <label style={{ background: '#7ab55c', color: '#fff', padding: '10px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}>
+                          📁 UPLOAD IMAGE
+                          <input type="file" accept="image/*" style={{ display: 'none' }}
+                            onChange={(e) => uploadImage(selected.defId, f.key, e.target.files?.[0])} />
+                        </label>
+                      </div>
+                    ) : (f.key === 'subtitle' || f.key === 'title') ? (
+                      <textarea style={{ ...inputStyle, minHeight: 72, resize: 'vertical' }}
+                        value={val}
+                        placeholder={selectedDef.defaults?.[f.key] || ''}
+                        onChange={(e) => setValue(selected.defId, f.key, e.target.value, f.type)} />
+                    ) : (
+                      <input style={inputStyle} value={val}
+                        placeholder={selectedDef.defaults?.[f.key] || ''}
+                        onChange={(e) => setValue(selected.defId, f.key, e.target.value, f.type)} />
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          ) : (
+            <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>{selected.icon}</div>
+              <h3 style={{ margin: '0 0 8px', fontSize: 16, color: '#333' }}>Section {selected.num}: {selected.label}</h3>
+              <p style={{ color: '#aaa', fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
+                This section is hardcoded in the source — its text and layout are fixed and cannot be changed from the admin panel.
+              </p>
+              <div style={{ background: '#f4f4f0', borderRadius: 10, padding: '12px 16px', fontSize: 12, color: '#888', textAlign: 'left' }}>
+                <strong style={{ display: 'block', marginBottom: 4 }}>To edit this section:</strong>
+                Edit the source file <code style={{ background: '#e8e8e4', padding: '1px 5px', borderRadius: 4 }}>app/page.jsx</code> or the relevant component in <code style={{ background: '#e8e8e4', padding: '1px 5px', borderRadius: 4 }}>app/HomeSections.jsx</code>.
               </div>
             </div>
-
-            {selectedDef.fields.map((f) => {
-              const cur = content[`${selectedId}.${f.key}`];
-              const val = cur?.value ?? '';
-              const isDirty = Boolean(dirty[`${selectedId}.${f.key}`]);
-              return (
-                <div key={f.key} style={{ marginBottom: 20 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
-                    {f.key.replace(/_/g, ' ')}
-                    {isDirty && <span style={{ background: '#e07b39', color: '#fff', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 800 }}>UNSAVED</span>}
-                    {f.hint && <span style={{ fontWeight: 400, textTransform: 'none', color: '#bbb', letterSpacing: 0, fontSize: 11 }}>— {f.hint}</span>}
-                  </label>
-
-                  {/* Default value hint */}
-                  {selectedDef.defaults?.[f.key] && f.type !== 'image' && (
-                    <p style={{ margin: '0 0 6px', fontSize: 11, color: '#bbb' }}>
-                      Default: <em>{selectedDef.defaults[f.key]}</em>
-                    </p>
-                  )}
-
-                  {f.type === 'image' ? (
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                      <div style={{ flex: 1 }}>
-                        <input style={inputStyle} value={val} placeholder="Image URL (or upload →)"
-                          onChange={(e) => setValue(selectedId, f.key, e.target.value, 'image')} />
-                        {val && (
-                          <div style={{ marginTop: 10, borderRadius: 10, overflow: 'hidden', border: '1px solid #eee', maxHeight: 160 }}>
-                            <img src={val} alt="" style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} />
-                          </div>
-                        )}
-                      </div>
-                      <label style={{ background: '#7ab55c', color: '#fff', padding: '10px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        UPLOAD
-                        <input type="file" accept="image/*" style={{ display: 'none' }}
-                          onChange={(e) => uploadImage(selectedId, f.key, e.target.files?.[0])} />
-                      </label>
-                    </div>
-                  ) : f.key === 'subtitle' || f.key === 'title' || (val && val.length > 60) ? (
-                    <textarea
-                      style={{ ...inputStyle, minHeight: f.key === 'subtitle' ? 80 : 60, resize: 'vertical' }}
-                      value={val}
-                      placeholder={selectedDef.defaults?.[f.key] || ''}
-                      onChange={(e) => setValue(selectedId, f.key, e.target.value, f.type)}
-                    />
-                  ) : (
-                    <input
-                      style={inputStyle}
-                      value={val}
-                      placeholder={selectedDef.defaults?.[f.key] || ''}
-                      onChange={(e) => setValue(selectedId, f.key, e.target.value, f.type)}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

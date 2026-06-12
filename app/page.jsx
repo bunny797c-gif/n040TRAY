@@ -25,7 +25,7 @@ export default async function HomePage() {
       <Header />
 
       {/* Hero */}
-      <div className="hero-bg">
+      <div className="hero-bg" id="s-hero">
         <section className="hero">
           <div className="hero-left">
             <div className="hero-label">
@@ -53,12 +53,12 @@ export default async function HomePage() {
       </div>
 
       {/* Banner */}
-      <div className="banner-section">
+      <div className="banner-section" id="s-banner">
         <Image src="/images/bg-1.png" alt="" width={1376} height={768} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
       {/* Why Microgreens */}
-      <section className="why-micro-section">
+      <section className="why-micro-section" id="s-why-micro">
         <div className="why-micro-inner">
           <div className="why-micro-left">
             <p className="why-micro-label">WHY MICROGREENS?</p>
@@ -82,21 +82,21 @@ export default async function HomePage() {
       </section>
 
       {/* Why Choose Us */}
-      <WhyChooseUs />
+      <div id="s-why-choose"><WhyChooseUs /></div>
       <VineDivider />
 
       {/* Products */}
-      <MicrogreensGrid
+      <div id="s-varieties"><MicrogreensGrid
         label={t(c, 'varieties.label', 'OUR VARIETIES')}
         title={t(c, 'varieties.title', 'Microgreens We Grow')}
         subtitle={t(c, 'varieties.subtitle', 'Each variety is grown in a dedicated batch, harvested at peak flavour, and packed the same day.')}
-      />
+      /></div>
 
       {/* Our Standards */}
-      <OurStandards />
+      <div id="s-standards"><OurStandards /></div>
 
       {/* Nutrition */}
-      <section className="nutrition-section">
+      <section className="nutrition-section" id="s-nutrition">
         <div className="nutrition-inner">
           <div className="nutrition-left">
             <p className="section-label" style={{color:'#c8d4a6'}}>NUTRITIONAL VALUE</p>
@@ -131,14 +131,14 @@ export default async function HomePage() {
       </section>
 
       {/* How It Works */}
-      <HowItWorks />
+      <div id="s-how-it-works"><HowItWorks /></div>
       <VineDivider />
 
       {/* Who We Serve */}
-      <WhoWeServe />
+      <div id="s-who-we-serve"><WhoWeServe /></div>
 
       {/* Testimonials */}
-      <section className="testimonials-section">
+      <section className="testimonials-section" id="s-testimonials">
         <div className="testimonials-inner">
           <p className="section-label">CUSTOMER STORIES</p>
           <h2 className="section-title">From Our Customers</h2>
@@ -171,7 +171,7 @@ export default async function HomePage() {
       </section>
 
       {/* FAQ */}
-      <section className="faq-section">
+      <section className="faq-section" id="s-faq">
         <div className="faq-inner">
           <div className="faq-left">
             <p className="section-label">COMMON QUESTIONS</p>
@@ -199,7 +199,7 @@ export default async function HomePage() {
       </section>
 
       {/* Final CTA */}
-      <section className="cta-section">
+      <section className="cta-section" id="s-cta">
         <div className="cta-inner">
           <p className="cta-label">{t(c, 'cta.label', 'READY TO START?')}</p>
           <h2 className="cta-title">{lines(t(c, 'cta.title', 'Your First Box,|Harvested Tomorrow.'))}</h2>
