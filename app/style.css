@@ -2000,17 +2000,14 @@ body {
 @media (max-width: 768px) {
     .testimonials-grid { grid-template-columns: 1fr; }
 
-    .testimonials-summary {
-        grid-template-columns: 1fr;
-        row-gap: 4px;
-    }
+    /* Same three equal columns as desktop, just smaller */
+    .testimonials-summary { padding: 18px 8px; }
 
-    .summary-stat + .summary-stat {
-        border-left: none;
-        border-top: 1px solid var(--accent-soft);
-        padding-top: 16px;
-    }
-    .summary-stat { padding-bottom: 12px; }
+    .summary-stat { padding: 4px 8px; }
+
+    .summary-stat strong { font-size: clamp(17px, 4.5vw, 24px); }
+
+    .summary-stat span { font-size: clamp(10px, 2.6vw, 12px); }
 }
 
 
