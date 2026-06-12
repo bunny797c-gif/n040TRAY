@@ -1170,6 +1170,88 @@ function SundayPackingTab({ subscriptions, stats }) {
   const delivering = subscriptions.filter(
     (s) => s.status === 'active' && s.next_delivery_date === nextSunday
   );
+
+  function printAddressLabels() {
+    const dateStr = new Date(nextSunday + 'T00:00:00').toLocaleDateString('en-IN', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+
+    function packLabel(audience) {
+      if (audience === 'single') return 'Single · 4 varieties × 25g';
+      if (audience === 'couple') return 'Couple · 4 varieties × 50g';
+      if (audience === 'family') return 'Family · 4 varieties × 100g';
+      return '';
+    }
+
+    const labels = delivering.map((s) => {
+      const addr = s.addresses;
+      const name = addr?.full_name || s.profiles?.full_name || '—';
+      const phone = addr?.phone || '—';
+      const line1 = addr?.line1 || '';
+      const line2 = addr?.line2 || '';
+      const city = addr?.city || '';
+      const state = addr?.state || '';
+      const pincode = addr?.pincode || '';
+      const addrLine = [line1, line2].filter(Boolean).join(', ');
+      const cityLine = [city, state, pincode].filter(Boolean).join(', ');
+      const pack = packLabel(s.plans?.audience);
+      return `
+        <div class="label">
+          <div class="brand">№40 TRAY — Microgreens</div>
+          <div class="name">${name}</div>
+          <div class="phone">📞 ${phone}</div>
+          ${addrLine ? `<div class="addr">${addrLine}</div>` : ''}
+          ${cityLine ? `<div class="addr">${cityLine}</div>` : ''}
+          <div class="pack">${pack}</div>
+          <div class="date">Delivery: ${dateStr}</div>
+        </div>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Address Labels — ${dateStr}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #fff; }
+  .page { display: flex; flex-wrap: wrap; gap: 0; padding: 10mm; }
+  .label {
+    width: 90mm;
+    min-height: 50mm;
+    border: 1.5px solid #333;
+    border-radius: 4px;
+    padding: 8mm 8mm 6mm;
+    margin: 3mm;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .brand { font-size: 7pt; color: #888; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 3px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+  .name { font-size: 13pt; font-weight: 800; color: #111; }
+  .phone { font-size: 9pt; color: #444; margin-top: 1px; }
+  .addr { font-size: 9pt; color: #555; line-height: 1.4; }
+  .pack { font-size: 8pt; font-weight: 700; color: #3a6b28; background: #eef5e6; padding: 2px 7px; border-radius: 10px; display: inline-block; margin-top: 5px; }
+  .date { font-size: 7pt; color: #aaa; margin-top: 4px; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 5mm; }
+    @page { margin: 5mm; size: A4; }
+  }
+</style>
+</head>
+<body>
+<div class="page">${labels}</div>
+<script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=900,height=700');
+    w.document.write(html);
+    w.document.close();
+  }
   const paused = subscriptions.filter((s) => s.status === 'paused');
   const notThisSunday = subscriptions.filter(
     (s) => s.status === 'active' && s.next_delivery_date !== nextSunday
@@ -1219,9 +1301,18 @@ function SundayPackingTab({ subscriptions, stats }) {
             Sunday, {new Date(nextSunday + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 36, fontWeight: 900, color: '#7ab55c' }}>{delivering.length}</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>boxes to pack</div>
+        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 36, fontWeight: 900, color: '#7ab55c', lineHeight: 1 }}>{delivering.length}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>boxes to pack</div>
+          </div>
+          <button
+            onClick={printAddressLabels}
+            disabled={delivering.length === 0}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#7ab55c', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: delivering.length === 0 ? 'not-allowed' : 'pointer', opacity: delivering.length === 0 ? 0.5 : 1, letterSpacing: 0.3 }}
+          >
+            🖨️ Print Labels
+          </button>
         </div>
       </div>
 
