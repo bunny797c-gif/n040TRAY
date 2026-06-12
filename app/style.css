@@ -3226,7 +3226,7 @@ html:not(.js-reveal) [data-reveal] {
 
 /* ── Page transitions ── */
 .page-transition {
-    animation: page-enter 0.55s var(--ease-out) both;
+    animation: page-enter 0.25s ease both;
 }
 
 /* Opacity-only: a transform here would create a containing block and break
