@@ -47,6 +47,11 @@ export default function SubscriptionActions({ subscriptionId, status, nextDelive
       'Resume your subscription? Your next delivery will be the upcoming Sunday.', 'resume');
   }
 
+  function cancelSub() {
+    call('/api/subscriptions/cancel', { subscription_id: subscriptionId },
+      'Cancel this subscription? This stops all future deliveries. No refund is given for paid deliveries that haven\'t been used yet. You can subscribe again later, but this action can\'t be undone.', 'cancel');
+  }
+
   return (
     <div className="acct-actions">
       {locked ? (
@@ -70,6 +75,11 @@ export default function SubscriptionActions({ subscriptionId, status, nextDelive
       </p>
       {message && (
         <div className={`acct-action-msg acct-action-msg--${message.type}`}>{message.text}</div>
+      )}
+      {!locked && (
+        <button className="acct-action-cancel" disabled={!!busy} onClick={cancelSub}>
+          {busy === 'cancel' ? 'Cancelling…' : 'Cancel subscription'}
+        </button>
       )}
     </div>
   );
