@@ -260,9 +260,15 @@ export default async function AccountPage() {
 
               {/* Address */}
               <div className="acct-card">
-                <div className="acct-card-hd"><h2>Delivery Address</h2></div>
+                <div className="acct-card-hd">
+                  <h2>Delivery Address</h2>
+                  <Link href="/account/addresses" className="acct-card-link">Manage →</Link>
+                </div>
                 {addresses.length === 0 ? (
-                  <p className="acct-empty">No address saved yet.</p>
+                  <div style={{ padding: '0 20px 20px' }}>
+                    <p className="acct-empty">No address saved yet.</p>
+                    <Link href="/account/addresses" className="addr-btn-primary" style={{ display: 'inline-block', textDecoration: 'none', marginTop: 8 }}>+ Add address</Link>
+                  </div>
                 ) : (
                   <div className="acct-addr-list">
                     {addresses.slice(0, 2).map((a) => (
@@ -276,6 +282,11 @@ export default async function AccountPage() {
                         {a.is_default && <span className="acct-default-tag">Default</span>}
                       </div>
                     ))}
+                    {addresses.length > 2 && (
+                      <Link href="/account/addresses" className="acct-card-link" style={{ padding: '8px 20px 4px', display: 'block' }}>
+                        + {addresses.length - 2} more →
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>
