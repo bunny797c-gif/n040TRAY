@@ -1044,6 +1044,7 @@ a { color: inherit; }
 
 .acct-order-arrival--done { background: #f4f4f0; color: #777; }
 .acct-order-arrival--pending { background: #fff4e0; color: #9a6200; }
+.acct-order-arrival--missed { background: #fdecea; color: #b0281e; }
 
 /* ── Address ── */
 .acct-addr-list {
@@ -1100,6 +1101,7 @@ a { color: inherit; }
 .acct-badge--packed { background: #e8edf5; color: #4a5d7c; }
 .acct-badge--out_for_delivery { background: #fff4e0; color: #b87800; }
 .acct-badge--delivered { background: #4a7c59; color: #fff; }
+.acct-badge--missed { background: #fdecea; color: #b0281e; }
 
 /* ── Empty state ── */
 .acct-empty {

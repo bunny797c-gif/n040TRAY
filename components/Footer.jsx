@@ -21,13 +21,13 @@ export default function Footer() {
           </div>
         </div>
         <div className="footer-col">
-          <h4>Products</h4>
-          <Link href="/#microgreens">Sunflower Microgreens</Link>
-          <Link href="/#microgreens">Radish Microgreens</Link>
-          <Link href="/#microgreens">Pea Shoots</Link>
-          <Link href="/#microgreens">Broccoli Microgreens</Link>
-          <Link href="/#microgreens">Wheatgrass</Link>
-          <Link href="/#microgreens">Fenugreek Microgreens</Link>
+          <h4>Shop</h4>
+          <Link href="/microgreens">All Microgreens</Link>
+          <Link href="/subscription">Subscriptions</Link>
+          <Link href="/#why-micro">Why Microgreens</Link>
+          <Link href="/#standards">Our Standards</Link>
+          <Link href="/#nutrition">Nutrition</Link>
+          <Link href="/#faq">FAQ</Link>
         </div>
         <div className="footer-col">
           <h4>Subscriptions</h4>

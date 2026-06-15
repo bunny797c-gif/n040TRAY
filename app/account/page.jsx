@@ -68,7 +68,7 @@ const SCHED_LABEL = {
 
 // Order tracking: how far along the Amazon-style pipeline each status is.
 const TRACK_STEPS = ['Ordered', 'Packed', 'Out for delivery', 'Delivered'];
-const TRACK_PROGRESS = { paid: 1, packed: 2, out_for_delivery: 3, delivered: 4 };
+const TRACK_PROGRESS = { paid: 1, packed: 2, out_for_delivery: 3, delivered: 4, missed: 3 };
 
 function arrivalLabel(d) {
   if (!d) return null;
@@ -242,9 +242,12 @@ export default async function AccountPage() {
                                   </div>
                                 ))}
                               </div>
-                              {arriving && <p className="acct-order-arrival">📦 {arriving}</p>}
+                              {arriving && o.status !== 'missed' && <p className="acct-order-arrival">📦 {arriving}</p>}
                               {o.status === 'delivered' && o.delivery_date && (
                                 <p className="acct-order-arrival acct-order-arrival--done">✓ Delivered on {fmtDate(o.delivery_date)}</p>
+                              )}
+                              {o.status === 'missed' && (
+                                <p className="acct-order-arrival acct-order-arrival--missed">⚠ We couldn't deliver this order — no one was home on the scheduled day. Contact us if this is wrong.</p>
                               )}
                             </>
                           )}

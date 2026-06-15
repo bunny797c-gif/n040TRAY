@@ -110,6 +110,7 @@ const STATUS_COLORS = {
   packed:          { bg: '#e8edf5', color: '#3a5080' },
   out_for_delivery:{ bg: '#fff4e0', color: '#9a6200' },
   delivered:       { bg: '#1a2e1a', color: '#c8e6b0' },
+  missed:          { bg: '#fdecea', color: '#b0281e' },
 };
 
 function StatusBadge({ status }) {
@@ -548,7 +549,7 @@ function OrdersTab({ orders, setOrders, onRefresh }) {
       )}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
-        {['all','paid','packed','out_for_delivery','delivered','created','failed','cancelled'].map((s) => (
+        {['all','paid','packed','out_for_delivery','delivered','missed','created','failed','cancelled'].map((s) => (
           <button key={s} onClick={() => setFilter(s)} style={{ padding: '8px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: filter === s ? '#4a7c59' : '#f0f0ea', color: filter === s ? '#fff' : '#555' }}>
             {s === 'all' ? 'All' : s.replace(/_/g, ' ')}
           </button>
@@ -561,21 +562,31 @@ function OrdersTab({ orders, setOrders, onRefresh }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: '#f9f9f6' }}>
-              {['Date','Amount','Status','Razorpay Order ID','Razorpay Payment ID','Paid At','Actions'].map((h) => (
+              {['Date','Amount / Items','Status','Razorpay Order ID','Paid At','Actions'].map((h) => (
                 <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.4, borderBottom: '1px solid #eee', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: '#bbb', fontSize: 14 }}>No orders.</td></tr>
+              <tr><td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: '#bbb', fontSize: 14 }}>No orders.</td></tr>
             ) : filtered.map((o, i) => (
               <tr key={o.id} style={{ background: i % 2 === 0 ? '#fff' : '#fafaf7' }}>
                 <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#666' }}>{fmtDate(o.created_at)}</td>
-                <td style={{ padding: '12px 14px', fontWeight: 700, color: '#222' }}>{inr(o.amount_inr)}</td>
+                <td style={{ padding: '12px 14px' }}>
+                  <div style={{ fontWeight: 700, color: '#222' }}>{inr(o.amount_inr)}</div>
+                  {Array.isArray(o.items) && o.items.length > 0 ? (
+                    <div style={{ marginTop: 4, fontSize: 11, color: '#888', lineHeight: 1.4 }}>
+                      {o.items.map((it, j) => (
+                        <div key={j}>🌿 {it.name}{it.pack ? ` · ${it.pack}` : ''} × {it.qty}</div>
+                      ))}
+                    </div>
+                  ) : o.subscription_id ? (
+                    <div style={{ marginTop: 4, fontSize: 11, color: '#aaa' }}>Subscription</div>
+                  ) : null}
+                </td>
                 <td style={{ padding: '12px 14px' }}><StatusBadge status={o.status} /></td>
                 <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontSize: 11, color: '#888' }}>{o.razorpay_order_id || '—'}</td>
-                <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontSize: 11, color: '#888' }}>{o.razorpay_payment_id || '—'}</td>
                 <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#888' }}>{o.paid_at ? fmtDate(o.paid_at) : '—'}</td>
                 <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
@@ -585,6 +596,15 @@ function OrdersTab({ orders, setOrders, onRefresh }) {
                         style={{ padding: '5px 10px', borderRadius: 6, border: 'none', background: '#4a7c59', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                       >
                         {NEXT_STEP[o.status].label}
+                      </button>
+                    )}
+                    {o.status === 'out_for_delivery' && (
+                      <button
+                        onClick={() => setStatus(o, 'missed', 'Marked as missed — customer not home.')}
+                        style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #b0281e', background: '#fff5f5', color: '#b0281e', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        title="Customer not home / delivery failed"
+                      >
+                        ✗ Missed
                       </button>
                     )}
                     {o.status !== 'cancelled' && o.status !== 'paid' && o.status !== 'delivered' && !NEXT_STEP[o.status] && (
@@ -1074,6 +1094,24 @@ function VarietiesTab() {
     }
   }
 
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  async function deleteVariety(id) {
+    setConfirmDelete(null);
+    const res = await fetch('/api/admin/microgreens', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) {
+      const d = await res.json();
+      setMsg({ type: 'error', text: d.error || 'Delete failed' });
+      return;
+    }
+    setVarieties((prev) => prev.filter((x) => x.id !== id));
+    setMsg({ type: 'ok', text: 'Variety removed.' });
+  }
+
   function startEditing(v) {
     setEditingFields((prev) => ({
       ...prev,
@@ -1318,13 +1356,22 @@ function VarietiesTab() {
                   </div>
                 </div>
 
-                {/* Expand/collapse */}
-                <button
-                  onClick={() => setExpandedId(isExpanded ? null : v.id)}
-                  style={{ width: '100%', background: '#f0f0ea', border: 'none', borderRadius: 8, padding: '7px', fontSize: 12, fontWeight: 700, color: '#555', cursor: 'pointer' }}
-                >
-                  {isExpanded ? '▲ Less info' : '▼ Full details'}
-                </button>
+                {/* Expand/collapse + delete */}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : v.id)}
+                    style={{ flex: 1, background: '#f0f0ea', border: 'none', borderRadius: 8, padding: '7px', fontSize: 12, fontWeight: 700, color: '#555', cursor: 'pointer' }}
+                  >
+                    {isExpanded ? '▲ Less info' : '▼ Full details'}
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(v)}
+                    style={{ background: '#fff5f5', border: '1px solid #f0c8c8', borderRadius: 8, padding: '7px 10px', fontSize: 12, fontWeight: 700, color: '#c0392b', cursor: 'pointer' }}
+                    title="Delete this variety"
+                  >
+                    🗑️
+                  </button>
+                </div>
 
                 {/* Expanded details */}
                 {isExpanded && (
@@ -1388,6 +1435,22 @@ function VarietiesTab() {
           );
         })}
       </div>
+
+      {confirmDelete && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#fff', borderRadius: 14, padding: '28px 32px', maxWidth: 360, width: '100%', textAlign: 'center', boxShadow: '0 8px 40px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🗑️</div>
+            <h3 style={{ margin: '0 0 8px', fontSize: 17, color: '#222' }}>Delete "{confirmDelete.name}"?</h3>
+            <p style={{ margin: '0 0 22px', fontSize: 13, color: '#777' }}>
+              This permanently removes the variety from your catalog. Existing orders that reference it stay intact.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button onClick={() => setConfirmDelete(null)} style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid #ddd', background: '#f5f5f0', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#555' }}>Cancel</button>
+              <button onClick={() => deleteVariety(confirmDelete.id)} style={{ padding: '10px 22px', borderRadius: 8, border: 'none', background: '#c0392b', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: '#fff' }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
