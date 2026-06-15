@@ -476,9 +476,23 @@ function SubscribersTab({ subscriptions }) {
 // ── Orders Tab ────────────────────────────────────────────────────────────
 function OrdersTab({ orders, setOrders, onRefresh }) {
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [msg, setMsg] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const filtered = useMemo(() => filter === 'all' ? orders : orders.filter((o) => o.status === filter), [orders, filter]);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return orders.filter((o) => {
+      if (filter !== 'all' && o.status !== filter) return false;
+      if (!q) return true;
+      return (
+        o.profiles?.email?.toLowerCase().includes(q) ||
+        o.profiles?.full_name?.toLowerCase().includes(q) ||
+        o.razorpay_order_id?.toLowerCase().includes(q) ||
+        o.razorpay_payment_id?.toLowerCase().includes(q) ||
+        (Array.isArray(o.items) && o.items.some((it) => it.name?.toLowerCase().includes(q)))
+      );
+    });
+  }, [orders, filter, search]);
   const totalPaid = orders.filter((o) => o.status === 'paid').reduce((s, o) => s + Number(o.amount_inr || 0), 0);
 
   async function setStatus(o, status, okText) {
@@ -549,6 +563,12 @@ function OrdersTab({ orders, setOrders, onRefresh }) {
       )}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input
+          style={{ ...inputStyle, width: 220, padding: '9px 14px' }}
+          placeholder="Search name, email, item, Razorpay ID…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
         {['all','paid','packed','out_for_delivery','delivered','missed','created','failed','cancelled'].map((s) => (
           <button key={s} onClick={() => setFilter(s)} style={{ padding: '8px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: filter === s ? '#4a7c59' : '#f0f0ea', color: filter === s ? '#fff' : '#555' }}>
             {s === 'all' ? 'All' : s.replace(/_/g, ' ')}
@@ -562,17 +582,21 @@ function OrdersTab({ orders, setOrders, onRefresh }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: '#f9f9f6' }}>
-              {['Date','Amount / Items','Status','Razorpay Order ID','Paid At','Actions'].map((h) => (
+              {['Date','Customer','Amount / Items','Status','Razorpay Order ID','Paid At','Actions'].map((h) => (
                 <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.4, borderBottom: '1px solid #eee', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: '#bbb', fontSize: 14 }}>No orders.</td></tr>
+              <tr><td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: '#bbb', fontSize: 14 }}>No orders.</td></tr>
             ) : filtered.map((o, i) => (
               <tr key={o.id} style={{ background: i % 2 === 0 ? '#fff' : '#fafaf7' }}>
                 <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#666' }}>{fmtDate(o.created_at)}</td>
+                <td style={{ padding: '12px 14px' }}>
+                  <div style={{ fontWeight: 600, color: '#222' }}>{o.profiles?.full_name || '—'}</div>
+                  <div style={{ color: '#999', fontSize: 11 }}>{o.profiles?.email || ''}</div>
+                </td>
                 <td style={{ padding: '12px 14px' }}>
                   <div style={{ fontWeight: 700, color: '#222' }}>{inr(o.amount_inr)}</div>
                   {Array.isArray(o.items) && o.items.length > 0 ? (

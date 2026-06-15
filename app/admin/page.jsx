@@ -40,7 +40,7 @@ export default async function AdminPage() {
       .limit(200),
     supabase
       .from('orders')
-      .select('*')
+      .select('*, profiles(full_name, email)')
       .order('created_at', { ascending: false })
       .limit(100),
   ]);
