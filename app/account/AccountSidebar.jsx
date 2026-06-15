@@ -34,6 +34,9 @@ export default function AccountSidebar({ active, name, hasActivePlan }) {
           <Link href="/account/addresses" className={`acct-nav-link${active === 'addresses' ? ' acct-nav-link--active' : ''}`}>
             <span>📍</span> Addresses
           </Link>
+          <Link href="/account/profile" className={`acct-nav-link${active === 'profile' ? ' acct-nav-link--active' : ''}`}>
+            <span>👤</span> Profile
+          </Link>
           {!hasActivePlan && (
             <Link href="/subscription" className={`acct-nav-link${active === 'plans' ? ' acct-nav-link--active' : ''}`}>
               <span>📋</span> Browse Plans
@@ -60,6 +63,10 @@ export default function AccountSidebar({ active, name, hasActivePlan }) {
         <Link href="/account/addresses" className={`acct-bottom-tab${active === 'addresses' ? ' acct-bottom-tab--active' : ''}`}>
           <span>📍</span>
           <span>Address</span>
+        </Link>
+        <Link href="/account/profile" className={`acct-bottom-tab${active === 'profile' ? ' acct-bottom-tab--active' : ''}`}>
+          <span>👤</span>
+          <span>Profile</span>
         </Link>
         {!hasActivePlan && (
           <Link href="/subscription" className="acct-bottom-tab">
