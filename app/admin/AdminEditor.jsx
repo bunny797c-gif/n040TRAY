@@ -521,12 +521,13 @@ function OverviewTab({ stats, subscriptions, orders }) {
             <div style={{ padding: '24px 18px', color: '#aaa', fontSize: 13, textAlign: 'center' }}>No orders yet.</div>
           ) : (
             recentOrders.map((o, i) => (
-              <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 18px', borderBottom: i < recentOrders.length - 1 ? '1px solid #f5f5f0' : 'none', fontSize: 13 }}>
-                <div>
+              <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '11px 18px', borderBottom: i < recentOrders.length - 1 ? '1px solid #f5f5f0' : 'none', fontSize: 13, gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, color: '#1a2e1a' }}>{o.profiles?.full_name || '—'}</div>
-                  <div style={{ color: '#aaa', fontSize: 11 }}>{fmtDate(o.created_at)}</div>
+                  <div style={{ color: '#888', fontSize: 11, marginTop: 1 }}>✉ {o.profiles?.email || '—'}</div>
+                  <div style={{ color: '#aaa', fontSize: 11, marginTop: 1 }}>{fmtDate(o.created_at)}</div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontWeight: 800, color: '#4a7c59' }}>{inr(o.amount_inr)}</div>
                   <StatusBadge status={o.status} />
                 </div>
