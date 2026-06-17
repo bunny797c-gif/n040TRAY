@@ -359,6 +359,7 @@ function StatCard({ label, value, sub, accent, icon }) {
 function OverviewTab({ stats, subscriptions, orders }) {
   const [deliveries, setDeliveries] = useState([]);
   const [deliveryUpdating, setDeliveryUpdating] = useState({});
+  const [upcomingPanel, setUpcomingPanel] = useState(null); // subscription_id for side panel
 
   useEffect(() => {
     fetch('/api/admin/deliveries').then((r) => r.json()).then((d) => {
@@ -396,9 +397,34 @@ function OverviewTab({ stats, subscriptions, orders }) {
   const totalRevenue = orders.filter((o) => o.status === 'paid').reduce((s, o) => s + Number(o.amount_inr || 0), 0);
   const pendingPayments = orders.filter((o) => o.status === 'created').length;
 
-  // This Sunday deliveries from subscriptions
+  // This Sunday deliveries
   const thisSundayDeliveries = deliveries.filter((d) => d.scheduled_date === nextSundayStr);
-  const upcomingDeliveries   = deliveries.filter((d) => d.scheduled_date > nextSundayStr && d.status === 'scheduled').slice(0, 6);
+
+  // Upcoming: group by subscription, one card per customer
+  const upcomingRaw = deliveries.filter((d) => d.scheduled_date > nextSundayStr && d.status === 'scheduled');
+  const upcomingBySub = upcomingRaw.reduce((acc, d) => {
+    const sid = d.subscription_id;
+    if (!acc[sid]) acc[sid] = [];
+    acc[sid].push(d);
+    return acc;
+  }, {});
+  const upcomingCustomers = Object.entries(upcomingBySub).map(([sid, rows]) => {
+    const sub = rows[0]?.subscriptions;
+    const addr = sub?.addresses;
+    const profile = sub?.profiles;
+    return {
+      sid,
+      name: addr?.full_name || profile?.full_name || '—',
+      phone: addr?.phone || '—',
+      email: profile?.email || '—',
+      plan: sub?.plans,
+      addr,
+      rows: rows.sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date)),
+    };
+  });
+
+  // Panel data
+  const panelCustomer = upcomingPanel ? upcomingCustomers.find((c) => c.sid === upcomingPanel) : null;
 
   const sundayDateLabel = new Date(nextSundayStr + 'T00:00:00').toLocaleDateString('en-IN', {
     weekday: 'long', day: 'numeric', month: 'long',
@@ -479,33 +505,42 @@ function OverviewTab({ stats, subscriptions, orders }) {
         )}
       </div>
 
-      {/* ── Bottom 2-col: Upcoming deliveries + Recent orders ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+      {/* ── Bottom section: 2-col cards + optional side panel ── */}
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
 
-        {/* Upcoming deliveries */}
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #eee', overflow: 'hidden' }}>
+        {/* Upcoming deliveries — one row per customer */}
+        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #eee', overflow: 'hidden', position: 'relative' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0ea', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#1a2e1a' }}>📅 Upcoming Deliveries</h3>
-            <span style={{ fontSize: 11, color: '#aaa' }}>After this Sunday</span>
+            <span style={{ fontSize: 11, color: '#aaa' }}>After this Sunday · click for details</span>
           </div>
-          {upcomingDeliveries.length === 0 ? (
+          {upcomingCustomers.length === 0 ? (
             <div style={{ padding: '24px 18px', color: '#aaa', fontSize: 13, textAlign: 'center' }}>No upcoming deliveries.</div>
           ) : (
-            upcomingDeliveries.map((d, i) => {
-              const sub  = d.subscriptions;
-              const addr = sub?.addresses;
-              const name = addr?.full_name || sub?.profiles?.full_name || '—';
-              const { bg, color } = packBadge(sub?.plans?.audience);
+            upcomingCustomers.map((c, i) => {
+              const { bg, color } = packBadge(c.plan?.audience);
+              const isOpen = upcomingPanel === c.sid;
+              const nextDate = c.rows[0]?.scheduled_date;
               return (
-                <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: i < upcomingDeliveries.length - 1 ? '1px solid #f5f5f0' : 'none', fontSize: 13 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4a7c59', flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, color: '#1a2e1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
-                    <div style={{ fontSize: 11, color: '#aaa' }}>{sub?.plans?.name}</div>
+                <div
+                  key={c.sid}
+                  onClick={() => setUpcomingPanel(isOpen ? null : c.sid)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 18px', borderBottom: i < upcomingCustomers.length - 1 ? '1px solid #f5f5f0' : 'none', fontSize: 13, cursor: 'pointer', background: isOpen ? '#f0f7ea' : 'transparent', transition: 'background 0.15s' }}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1a2e1a', color: '#c8e6b0', fontWeight: 800, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {c.name[0]?.toUpperCase()}
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, background: '#f0f7ea', color: '#3a6b28', padding: '2px 8px', borderRadius: 6, whiteSpace: 'nowrap' }}>
-                    {fmtDateShort(d.scheduled_date)}
-                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, color: '#1a2e1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
+                    <div style={{ fontSize: 11, color: '#888' }}>{c.plan?.name} · {c.rows.length} deliveries left</div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, background: '#f0f7ea', color: '#3a6b28', padding: '2px 8px', borderRadius: 6 }}>
+                      Next: {fmtDateShort(nextDate)}
+                    </span>
+                    <div style={{ fontSize: 10, color: '#bbb', marginTop: 3 }}>tap to view ›</div>
+                  </div>
                 </div>
               );
             })
@@ -535,6 +570,64 @@ function OverviewTab({ stats, subscriptions, orders }) {
             ))
           )}
         </div>
+      </div>
+
+      {/* Side panel — delivery details for selected upcoming customer */}
+      {panelCustomer && (
+        <div style={{ width: 300, flexShrink: 0, background: '#fff', border: '1.5px solid #e4e4dc', borderRadius: 14, overflow: 'hidden', position: 'sticky', top: 20 }}>
+          <div style={{ background: '#1a2e1a', padding: '14px 16px', color: '#fff' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 14 }}>{panelCustomer.name}</div>
+                <div style={{ fontSize: 11, color: '#c8e6b0', marginTop: 1 }}>{panelCustomer.plan?.name}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>📞 {panelCustomer.phone}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>✉ {panelCustomer.email}</div>
+              </div>
+              <button onClick={() => setUpcomingPanel(null)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>×</button>
+            </div>
+            {panelCustomer.addr && (
+              <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+                📍 {[panelCustomer.addr.line1, panelCustomer.addr.line2, panelCustomer.addr.city, panelCustomer.addr.pincode].filter(Boolean).join(', ')}
+              </div>
+            )}
+          </div>
+          <div style={{ padding: '8px 0', maxHeight: 400, overflowY: 'auto' }}>
+            {panelCustomer.rows.map((d, i) => {
+              const isPast = d.scheduled_date < new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+              const stMap = { scheduled: { dot: '#4a7c59', label: 'Upcoming', color: '#3a6b28' }, delivered: { dot: '#1a7c3a', label: 'Delivered', color: '#1a7c3a' }, skipped: { dot: '#e0a020', label: 'Skipped', color: '#c07a00' } };
+              const st = stMap[d.status] || stMap.scheduled;
+              const busy = deliveryUpdating[d.id];
+              return (
+                <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: i < panelCustomer.rows.length - 1 ? '1px solid #f5f5f0' : 'none' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: st.dot, flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: isPast && d.status === 'scheduled' ? '#c0392b' : '#1a2e1a' }}>{fmtDate(d.scheduled_date)}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: st.color }}>{st.label}</div>
+                  </div>
+                  {d.status !== 'delivered' && (
+                    <button
+                      onClick={() => markDelivery(d.id, 'delivered')}
+                      disabled={!!busy}
+                      style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 6, border: '1.5px solid #4a7c59', background: '#fff', color: '#4a7c59', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      {busy ? '…' : '✓ Done'}
+                    </button>
+                  )}
+                  {d.status === 'delivered' && (
+                    <button
+                      onClick={() => markDelivery(d.id, 'scheduled')}
+                      disabled={!!busy}
+                      style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 6, border: '1.5px solid #ddd', background: '#fff', color: '#aaa', cursor: 'pointer' }}
+                    >
+                      {busy ? '…' : 'Undo'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
