@@ -357,63 +357,182 @@ function StatCard({ label, value, sub, accent, icon }) {
 
 // ── Overview Tab ──────────────────────────────────────────────────────────
 function OverviewTab({ stats, subscriptions, orders }) {
-  const recentOrders = orders.slice(0, 8);
-  const upcomingSubs = subscriptions.filter((s) => s.status === 'active').slice(0, 8);
+  const [deliveries, setDeliveries] = useState([]);
+  const [deliveryUpdating, setDeliveryUpdating] = useState({});
 
-  // Compute stats live from client-fetched data.
-  // Format in LOCAL time — toISOString() shifts the day for IST.
-  const today = new Date();
-  const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
-  const nextSunday = new Date(today);
-  nextSunday.setDate(today.getDate() + daysUntilSunday);
-  const nextSundayStr = `${nextSunday.getFullYear()}-${String(nextSunday.getMonth() + 1).padStart(2, '0')}-${String(nextSunday.getDate()).padStart(2, '0')}`;
+  useEffect(() => {
+    fetch('/api/admin/deliveries').then((r) => r.json()).then((d) => {
+      if (Array.isArray(d)) setDeliveries(d);
+    });
+    const t = setInterval(() => {
+      fetch('/api/admin/deliveries').then((r) => r.json()).then((d) => {
+        if (Array.isArray(d)) setDeliveries(d);
+      });
+    }, 30000);
+    return () => clearInterval(t);
+  }, []);
 
-  const activeSubs = subscriptions.filter((s) => s.status === 'active').length;
-  const pausedSubs = subscriptions.filter((s) => s.status === 'paused').length;
-  const deliveriesThisSunday = subscriptions.filter((s) => s.status === 'active' && s.next_delivery_date === nextSundayStr).length;
+  async function markDelivery(id, status) {
+    setDeliveryUpdating((p) => ({ ...p, [id]: true }));
+    await fetch('/api/admin/deliveries', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    });
+    const res = await fetch('/api/admin/deliveries');
+    const d = await res.json();
+    if (Array.isArray(d)) setDeliveries(d);
+    setDeliveryUpdating((p) => { const n = { ...p }; delete n[id]; return n; });
+  }
+
+  const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const daysUntilSunday = (7 - new Date().getDay()) % 7 || 7;
+  const nextSun = new Date();
+  nextSun.setDate(nextSun.getDate() + daysUntilSunday);
+  const nextSundayStr = nextSun.toLocaleDateString('en-CA');
+
+  const activeSubs   = subscriptions.filter((s) => s.status === 'active').length;
+  const pausedSubs   = subscriptions.filter((s) => s.status === 'paused').length;
   const totalRevenue = orders.filter((o) => o.status === 'paid').reduce((s, o) => s + Number(o.amount_inr || 0), 0);
   const pendingPayments = orders.filter((o) => o.status === 'created').length;
 
+  // This Sunday deliveries from subscriptions
+  const thisSundayDeliveries = deliveries.filter((d) => d.scheduled_date === nextSundayStr);
+  const upcomingDeliveries   = deliveries.filter((d) => d.scheduled_date > nextSundayStr && d.status === 'scheduled').slice(0, 6);
+
+  const sundayDateLabel = new Date(nextSundayStr + 'T00:00:00').toLocaleDateString('en-IN', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  });
+
+  function packBadge(audience) {
+    const map = { single: '#eef5e6', couple: '#e8f0ff', family: '#fff4e6' };
+    const col = { single: '#3d6b2e', couple: '#2e4a8a', family: '#8a5a2e' };
+    return { bg: map[audience] || '#f5f5f0', color: col[audience] || '#555' };
+  }
+
+  const recentOrders = orders.slice(0, 6);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
-        <StatCard label="Active Subscribers" value={activeSubs} sub="Current paying subscribers" accent="#4a7c59" icon="🌱" />
-        <StatCard label="Paused" value={pausedSubs} sub="Will resume when unpaused" accent="#5c7aaa" icon="⏸️" />
-        <StatCard label="This Sunday" value={deliveriesThisSunday} sub={`Deliveries on ${fmtDateShort(nextSundayStr)}`} accent="#f0a500" icon="📦" />
-        <StatCard label="Total Revenue" value={inr(totalRevenue)} sub="From paid orders" accent="#7ab55c" icon="💰" />
-        <StatCard label="Pending Payment" value={pendingPayments} sub="Orders awaiting payment" accent="#e07b39" icon="⏳" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
+
+      {/* ── KPI row ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+        <StatCard label="Active Subscribers" value={activeSubs} sub="Paying now" accent="#4a7c59" icon="🌱" />
+        <StatCard label="Paused" value={pausedSubs} sub="Will resume" accent="#5c7aaa" icon="⏸️" />
+        <StatCard label="This Sunday" value={thisSundayDeliveries.length} sub={fmtDateShort(nextSundayStr)} accent="#f0a500" icon="📦" />
+        <StatCard label="Total Revenue" value={inr(totalRevenue)} sub="Paid orders" accent="#7ab55c" icon="💰" />
+        <StatCard label="Pending Payment" value={pendingPayments} sub="Awaiting payment" accent="#e07b39" icon="⏳" />
       </div>
-      <div className="admin-2col">
-        <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: 15, color: '#333' }}>Active Subscribers</h3>
-          {upcomingSubs.length === 0
-            ? <p style={{ color: '#aaa', fontSize: 13 }}>No active subscribers yet.</p>
-            : upcomingSubs.map((s) => (
-              <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f5f5f0', fontSize: 13 }}>
+
+      {/* ── This Sunday section ── */}
+      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #eee', overflow: 'hidden' }}>
+        <div style={{ background: '#1a2e1a', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#c8e6b0', textTransform: 'uppercase', letterSpacing: 1 }}>📦 This Sunday</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginTop: 2 }}>{sundayDateLabel}</div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontWeight: 800, fontSize: 20 }}>
+            {thisSundayDeliveries.length} <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.7 }}>boxes</span>
+          </div>
+        </div>
+
+        {thisSundayDeliveries.length === 0 ? (
+          <div style={{ padding: '32px 20px', textAlign: 'center', color: '#aaa', fontSize: 13 }}>
+            📭 No deliveries scheduled for this Sunday.
+          </div>
+        ) : (
+          <div>
+            {thisSundayDeliveries.map((d, i) => {
+              const sub  = d.subscriptions;
+              const addr = sub?.addresses;
+              const plan = sub?.plans;
+              const name = addr?.full_name || sub?.profiles?.full_name || '—';
+              const phone = addr?.phone || '—';
+              const { bg, color } = packBadge(plan?.audience);
+              const isDone = d.status === 'delivered';
+              const busy   = deliveryUpdating[d.id];
+              return (
+                <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 20px', background: i % 2 === 0 ? '#fff' : '#fafaf7', borderBottom: '1px solid #f0f0ea', flexWrap: 'wrap' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: bg, color, fontWeight: 800, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
+                  <div style={{ flex: 1, minWidth: 140 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: '#1a2e1a' }}>{name}</div>
+                    <div style={{ fontSize: 12, color: '#888' }}>📞 {phone}{addr?.city ? ` · ${addr.city}` : ''}</div>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, background: bg, color, padding: '3px 10px', borderRadius: 8, whiteSpace: 'nowrap' }}>
+                    {plan?.audience?.toUpperCase()}
+                  </span>
+                  {isDone ? (
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1a7c3a' }}>✅ Delivered</span>
+                  ) : (
+                    <button
+                      onClick={() => markDelivery(d.id, 'delivered')}
+                      disabled={busy}
+                      style={{ fontSize: 12, fontWeight: 700, padding: '6px 14px', borderRadius: 8, border: '1.5px solid #4a7c59', background: '#fff', color: '#4a7c59', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      {busy ? '…' : '✓ Mark Delivered'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Bottom 2-col: Upcoming deliveries + Recent orders ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+
+        {/* Upcoming deliveries */}
+        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #eee', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0ea', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#1a2e1a' }}>📅 Upcoming Deliveries</h3>
+            <span style={{ fontSize: 11, color: '#aaa' }}>After this Sunday</span>
+          </div>
+          {upcomingDeliveries.length === 0 ? (
+            <div style={{ padding: '24px 18px', color: '#aaa', fontSize: 13, textAlign: 'center' }}>No upcoming deliveries.</div>
+          ) : (
+            upcomingDeliveries.map((d, i) => {
+              const sub  = d.subscriptions;
+              const addr = sub?.addresses;
+              const name = addr?.full_name || sub?.profiles?.full_name || '—';
+              const { bg, color } = packBadge(sub?.plans?.audience);
+              return (
+                <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: i < upcomingDeliveries.length - 1 ? '1px solid #f5f5f0' : 'none', fontSize: 13 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4a7c59', flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, color: '#1a2e1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                    <div style={{ fontSize: 11, color: '#aaa' }}>{sub?.plans?.name}</div>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, background: '#f0f7ea', color: '#3a6b28', padding: '2px 8px', borderRadius: 6, whiteSpace: 'nowrap' }}>
+                    {fmtDateShort(d.scheduled_date)}
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Recent orders */}
+        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #eee', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0ea' }}>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#1a2e1a' }}>💳 Recent Orders</h3>
+          </div>
+          {recentOrders.length === 0 ? (
+            <div style={{ padding: '24px 18px', color: '#aaa', fontSize: 13, textAlign: 'center' }}>No orders yet.</div>
+          ) : (
+            recentOrders.map((o, i) => (
+              <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 18px', borderBottom: i < recentOrders.length - 1 ? '1px solid #f5f5f0' : 'none', fontSize: 13 }}>
                 <div>
-                  <div style={{ fontWeight: 600, color: '#222' }}>{s.profiles?.full_name || s.profiles?.email?.split('@')[0] || '—'}</div>
-                  <div style={{ color: '#999', fontSize: 12 }}>{s.plans?.name} · {s.plans?.audience}</div>
+                  <div style={{ fontWeight: 700, color: '#1a2e1a' }}>{o.profiles?.full_name || '—'}</div>
+                  <div style={{ color: '#aaa', fontSize: 11 }}>{fmtDate(o.created_at)}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 12, color: '#888' }}>Next: {fmtDateShort(s.next_delivery_date)}</div>
-                  <StatusBadge status={s.status} />
+                  <div style={{ fontWeight: 800, color: '#4a7c59' }}>{inr(o.amount_inr)}</div>
+                  <StatusBadge status={o.status} />
                 </div>
               </div>
-            ))}
-        </div>
-        <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: 15, color: '#333' }}>Recent Orders</h3>
-          {recentOrders.length === 0
-            ? <p style={{ color: '#aaa', fontSize: 13 }}>No orders yet.</p>
-            : recentOrders.map((o) => (
-              <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f5f5f0', fontSize: 13 }}>
-                <div>
-                  <div style={{ fontWeight: 600, color: '#222' }}>{inr(o.amount_inr)}</div>
-                  <div style={{ color: '#999', fontSize: 12 }}>{fmtDate(o.created_at)}</div>
-                </div>
-                <StatusBadge status={o.status} />
-              </div>
-            ))}
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -1843,7 +1962,6 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
 
   const TABS = [
     { id: 'overview',    label: 'Overview',       icon: '📊' },
-    { id: 'sunday',      label: 'This Sunday',    icon: '📦' },
     { id: 'deliveries',  label: 'Deliveries',     icon: '🚚' },
     { id: 'subscribers', label: 'Subscribers',    icon: '🌱' },
     { id: 'orders',      label: 'Orders',          icon: '💳' },

@@ -21,7 +21,7 @@ export const metadata = {
   title: '№40 TRAY — Nature\'s Finest. 40 Times Over.',
   description:
     'Premium microgreens harvested daily and delivered fresh to your door. Nature\'s finest nutrition, 40 times over.',
-  icons: { icon: '/logo/logo1.png' },
+  icons: { icon: '/logo/sprout.png' },
 };
 
 export default function RootLayout({ children }) {
