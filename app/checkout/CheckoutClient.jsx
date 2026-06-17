@@ -31,6 +31,10 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [pinStatus, setPinStatus] = useState(null);
+  const [referralCode, setReferralCode] = useState('');
+  const [referralStatus, setReferralStatus] = useState(null); // null | { valid, message }
+  const [referralBusy, setReferralBusy] = useState(false);
+  const [discountInr, setDiscountInr] = useState(0);
 
 
   // Phone OTP state
@@ -55,6 +59,26 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
   }, []);
 
   function update(k, v) { setForm((f) => ({ ...f, [k]: v })); }
+
+  async function applyReferral() {
+    if (!referralCode.trim()) return;
+    setReferralBusy(true);
+    setReferralStatus(null);
+    const res = await fetch('/api/referral/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: referralCode.trim() }),
+    });
+    const data = await res.json();
+    if (data.valid) {
+      setReferralStatus({ valid: true, message: '🪙 500 coins applied — ₹50 off your order!' });
+      setDiscountInr(50);
+    } else {
+      setReferralStatus({ valid: false, message: data.error || 'Invalid code' });
+      setDiscountInr(0);
+    }
+    setReferralBusy(false);
+  }
 
   async function checkPincode(value) {
     if (!/^\d{6}$/.test(value)) { setPinStatus(null); return; }
@@ -141,7 +165,7 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
       const res = await fetch('/api/checkout/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan_id: plan.id, address: form }),
+        body: JSON.stringify({ plan_id: plan.id, address: form, referral_code: referralStatus?.valid ? referralCode.trim() : undefined }),
       });
 
       const data = await res.json();
@@ -314,6 +338,33 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
           </div>
         </div>
 
+        {/* Referral code */}
+        <div className="cf-section">
+          <p className="cf-section-label">Have a Referral Code? <span style={{ fontWeight: 400, color: '#aaa' }}>(optional)</span></p>
+          <div className="cf-phone-row">
+            <input
+              placeholder="e.g. TRAY-AB3X"
+              value={referralCode}
+              onChange={(e) => { setReferralCode(e.target.value.toUpperCase()); setReferralStatus(null); setDiscountInr(0); }}
+              style={{ textTransform: 'uppercase', letterSpacing: 1 }}
+              disabled={referralStatus?.valid}
+            />
+            {!referralStatus?.valid && (
+              <button type="button" className="cf-otp-send-btn" onClick={applyReferral} disabled={referralBusy || !referralCode.trim()}>
+                {referralBusy ? '…' : 'Apply'}
+              </button>
+            )}
+            {referralStatus?.valid && (
+              <button type="button" className="cf-otp-send-btn" style={{ background: '#ccc' }} onClick={() => { setReferralCode(''); setReferralStatus(null); setDiscountInr(0); }}>
+                Remove
+              </button>
+            )}
+          </div>
+          {referralStatus && (
+            <p className={`cf-hint ${referralStatus.valid ? 'cf-hint--ok' : 'cf-hint--err'}`}>{referralStatus.message}</p>
+          )}
+        </div>
+
         <button
           type="submit"
           className="cf-submit"
@@ -325,7 +376,7 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
               ? 'Verify Phone to Continue'
               : !pinStatus?.ok
                 ? 'Enter a Serviceable Pincode'
-                : `Pay ${inr(plan.price_inr)}`}
+                : `Pay ${inr(plan.price_inr - discountInr)}`}
         </button>
       </form>
 
@@ -345,9 +396,15 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
           </div>
           <div>{plan.deliveries}</div>
         </div>
+        {discountInr > 0 && (
+          <div className="row" style={{ color: '#4a7c59' }}>
+            <div>🪙 Referral Discount</div>
+            <div>−{inr(discountInr)}</div>
+          </div>
+        )}
         <div className="row">
           <div><strong>Total</strong></div>
-          <div><strong style={{ fontSize: 18, color: '#4a7c59' }}>{inr(plan.price_inr)}</strong></div>
+          <div><strong style={{ fontSize: 18, color: '#4a7c59' }}>{inr(plan.price_inr - discountInr)}</strong></div>
         </div>
 
 

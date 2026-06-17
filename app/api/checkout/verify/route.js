@@ -62,5 +62,12 @@ export async function POST(req) {
     console.warn('[verify] email send skipped', e?.message || e);
   }
 
+  // Trigger referral reward (fire and forget)
+  fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/referral/reward`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refereeId: user.id, orderId: order_db_id }),
+  }).catch(() => null);
+
   return NextResponse.json({ ok: true });
 }

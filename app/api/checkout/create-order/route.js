@@ -9,7 +9,7 @@ export async function POST(req) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
 
-  const { plan_id, address } = await req.json();
+  const { plan_id, address, referral_code } = await req.json();
   if (!plan_id || !address) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
   // Validate phone format strictly
@@ -64,6 +64,28 @@ export async function POST(req) {
     .single();
   if (addrError) return NextResponse.json({ error: addrError.message }, { status: 500 });
 
+  // Validate referral code and compute discount
+  let discountCoins = 0;
+  let validatedReferralCode = null;
+  if (referral_code) {
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    const admin = createAdminClient();
+    const { data: codeRow } = await admin
+      .from('referral_codes')
+      .select('id, user_id, is_active, uses_count, max_uses')
+      .eq('code', referral_code.toUpperCase().trim())
+      .maybeSingle();
+    if (codeRow && codeRow.is_active && codeRow.uses_count < codeRow.max_uses && codeRow.user_id !== user.id) {
+      discountCoins = 500; // 500 coins = ₹50 off
+      validatedReferralCode = referral_code.toUpperCase().trim();
+      // Store on profile for reward trigger at verify time
+      await admin.from('profiles').update({ referred_by_code: validatedReferralCode }).eq('id', user.id);
+    }
+  }
+
+  const discountInr = Math.floor(discountCoins / 10);
+  const finalAmount = Math.max(0, plan.price_inr - discountInr);
+
   // Create pending subscription
   const today = todayIST();
   const { data: sub, error: subError } = await supabase
@@ -86,7 +108,7 @@ export async function POST(req) {
     .insert({
       user_id: user.id,
       subscription_id: sub.id,
-      amount_inr: plan.price_inr,
+      amount_inr: finalAmount,
       status: 'created',
     })
     .select()
@@ -105,19 +127,28 @@ export async function POST(req) {
         name: addr.full_name,
         planName: plan.name,
         audience: plan.audience,
-        amount: plan.price_inr,
+        amount: finalAmount,
         deliveries: plan.deliveries,
         nextDelivery: sub.next_delivery_date,
         address: addr,
+        discountInr: discountInr || 0,
       });
     } catch {}
+    // Trigger referral reward for stub path
+    if (validatedReferralCode) {
+      await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/referral/reward`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refereeId: user.id, orderId: order.id }),
+      }).catch(() => null);
+    }
     return NextResponse.json({ stub: true, message: 'Razorpay not configured — marked as active for testing.' });
   }
 
   const razorpay = new Razorpay({ key_id, key_secret });
   try {
     const rzpOrder = await razorpay.orders.create({
-      amount: plan.price_inr * 100,
+      amount: finalAmount * 100,
       currency: 'INR',
       receipt: order.id,
       notes: { subscription_id: sub.id, user_id: user.id, plan_id: plan.id },
@@ -129,6 +160,8 @@ export async function POST(req) {
       amount: rzpOrder.amount,
       order_db_id: order.id,
       subscription_id: sub.id,
+      discount_inr: discountInr,
+      referral_code: validatedReferralCode,
     });
   } catch (e) {
     return NextResponse.json({ error: e.message || 'Razorpay order failed' }, { status: 500 });

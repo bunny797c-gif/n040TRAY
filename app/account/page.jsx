@@ -83,17 +83,19 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/account');
 
-  const [{ data: profile }, { data: subs = [] }, { data: orders = [] }, { data: addresses = [] }] = await Promise.all([
+  const [{ data: profile }, { data: subs = [] }, { data: orders = [] }, { data: addresses = [] }, { data: refCode }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
     supabase.from('subscriptions').select('*, plans(*)').eq('user_id', user.id).order('created_at', { ascending: false }),
     supabase.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
     supabase.from('addresses').select('*').eq('user_id', user.id).order('is_default', { ascending: false }),
+    supabase.from('referral_codes').select('is_active').eq('user_id', user.id).maybeSingle(),
   ]);
 
   const activeSub = subs?.find((s) => s.status === 'active') || subs?.[0];
   const hd = activeSub?.status === 'active' ? heroDate(activeSub.next_delivery_date) : null;
   const name = profile?.full_name || user.email.split('@')[0];
   const hasActivePlan = activeSub?.status === 'active' || activeSub?.status === 'paused';
+  const hasReferral = !!(refCode?.is_active);
   const schedule = hasActivePlan ? buildSchedule(activeSub) : [];
 
   return (
@@ -102,7 +104,7 @@ export default async function AccountPage() {
       <div className="acct-shell">
         <div className="acct-inner">
           <div className="acct-layout">
-            <AccountSidebar active="overview" name={name} hasActivePlan={hasActivePlan} />
+            <AccountSidebar active="overview" name={name} hasActivePlan={hasActivePlan} hasReferral={hasReferral} />
 
             <main className="acct-main">
 

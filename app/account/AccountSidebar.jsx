@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-export default function AccountSidebar({ active, name, hasActivePlan }) {
+export default function AccountSidebar({ active, name, hasActivePlan, hasReferral }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -37,6 +37,11 @@ export default function AccountSidebar({ active, name, hasActivePlan }) {
           <Link href="/account/profile" className={`acct-nav-link${active === 'profile' ? ' acct-nav-link--active' : ''}`}>
             <span>👤</span> Profile
           </Link>
+          {hasReferral && (
+            <Link href="/account/referral" className={`acct-nav-link${active === 'referral' ? ' acct-nav-link--active' : ''}`}>
+              <span>🎟️</span> Referrals
+            </Link>
+          )}
           {!hasActivePlan && (
             <Link href="/subscription" className={`acct-nav-link${active === 'plans' ? ' acct-nav-link--active' : ''}`}>
               <span>📋</span> Browse Plans
@@ -68,6 +73,12 @@ export default function AccountSidebar({ active, name, hasActivePlan }) {
           <span>👤</span>
           <span>Profile</span>
         </Link>
+        {hasReferral && (
+          <Link href="/account/referral" className={`acct-bottom-tab${active === 'referral' ? ' acct-bottom-tab--active' : ''}`}>
+            <span>🎟️</span>
+            <span>Referrals</span>
+          </Link>
+        )}
         {!hasActivePlan && (
           <Link href="/subscription" className="acct-bottom-tab">
             <span>📋</span>

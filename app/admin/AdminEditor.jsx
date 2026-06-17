@@ -3,6 +3,7 @@
 import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import ReferralsTab from './ReferralsTab';
 
 // Editable sections — matches what page.jsx actually reads via t()
 const SECTION_DEFS = [
@@ -1800,6 +1801,7 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
     { id: 'varieties',   label: 'Varieties',       icon: '🥬' },
     { id: 'plans',       label: 'Plans & Pricing', icon: '📋' },
     { id: 'pincodes',    label: 'Delivery Areas',  icon: '📍' },
+    { id: 'referrals',   label: 'Referrals',       icon: '🎟️' },
   ];
 
   return (
@@ -1860,6 +1862,7 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
           {tab === 'varieties'   && <VarietiesTab />}
           {tab === 'plans'       && <PlansTab plans={plans} setPlans={setPlans} busy={busy} setBusy={setBusy} setMsg={setMsg} />}
           {tab === 'pincodes'    && <PincodesTab pincodes={pincodes} setPincodes={setPincodes} busy={busy} setBusy={setBusy} setMsg={setMsg} />}
+          {tab === 'referrals'   && <ReferralsTab />}
         </main>
       </div>
 

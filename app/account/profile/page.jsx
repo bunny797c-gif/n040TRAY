@@ -11,13 +11,15 @@ export default async function ProfilePage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/account/profile');
 
-  const [{ data: profile }, { data: subs = [] }] = await Promise.all([
+  const [{ data: profile }, { data: subs = [] }, { data: refCode }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
     supabase.from('subscriptions').select('id, status').eq('user_id', user.id),
+    supabase.from('referral_codes').select('is_active').eq('user_id', user.id).maybeSingle(),
   ]);
 
   const name = profile?.full_name || user.email.split('@')[0];
   const hasActivePlan = subs.some((s) => ['active', 'paused', 'pending_payment'].includes(s.status));
+  const hasReferral = !!(refCode?.is_active);
 
   return (
     <>
@@ -29,7 +31,7 @@ export default async function ProfilePage() {
             <p>Update your name. Your email and phone are tied to sign-in and OTP — to change either, contact support.</p>
           </header>
           <div className="acct-layout">
-            <AccountSidebar active="profile" name={name} hasActivePlan={hasActivePlan} />
+            <AccountSidebar active="profile" name={name} hasActivePlan={hasActivePlan} hasReferral={hasReferral} />
             <main className="acct-main">
               <ProfileForm
                 email={user.email}
