@@ -1298,6 +1298,62 @@ a { color: inherit; }
     }
 
     .admin-pack-grid { grid-template-columns: 1fr; }
+
+    /* Admin tables → stacked cards on mobile. Each row becomes a card,
+       each cell labels itself via data-label. Cleaner than horizontal scroll
+       on a phone. */
+    .admin-main table {
+        font-size: 12px;
+    }
+
+    .admin-main thead {
+        position: absolute;
+        left: -9999px;
+        top: -9999px;
+    }
+
+    .admin-main tbody tr {
+        display: block;
+        background: #fff !important;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        padding: 8px 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .admin-main tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 7px 4px !important;
+        border-bottom: 1px dashed #f4f4f0;
+        white-space: normal !important;
+        text-align: right;
+    }
+
+    .admin-main tbody td:last-child { border-bottom: none; }
+
+    .admin-main tbody td::before {
+        content: attr(data-label);
+        font-size: 10px;
+        font-weight: 800;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        flex-shrink: 0;
+        text-align: left;
+        max-width: 38%;
+    }
+
+    /* Tables wrapped in our own scroll container: drop the border/radius,
+       since each row is its own card now. */
+    .admin-main div[style*="overflowX"] {
+        overflow-x: visible !important;
+        border: none !important;
+        border-radius: 0 !important;
+    }
 }
 
 /* ── This Sunday tab ── */

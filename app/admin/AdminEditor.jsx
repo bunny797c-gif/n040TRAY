@@ -454,16 +454,16 @@ function SubscribersTab({ subscriptions }) {
               <tr><td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: '#bbb', fontSize: 14 }}>No subscribers match this filter.</td></tr>
             ) : filtered.map((s, i) => (
               <tr key={s.id} style={{ background: i % 2 === 0 ? '#fff' : '#fafaf7' }}>
-                <td style={{ padding: '12px 14px' }}>
+                <td data-label="Customer" style={{ padding: '12px 14px' }}>
                   <div style={{ fontWeight: 600, color: '#222' }}>{s.profiles?.full_name || '—'}</div>
                   <div style={{ color: '#999', fontSize: 12 }}>{s.profiles?.email}</div>
                 </td>
-                <td style={{ padding: '12px 14px', color: '#444' }}>{s.plans?.name || '—'}</td>
-                <td style={{ padding: '12px 14px', textTransform: 'capitalize', color: '#666' }}>{s.plans?.audience || '—'}</td>
-                <td style={{ padding: '12px 14px' }}><StatusBadge status={s.status} /></td>
-                <td style={{ padding: '12px 14px', color: s.status === 'paused' ? '#aaa' : '#444', whiteSpace: 'nowrap' }}>{s.status === 'paused' ? <em>Paused</em> : fmtDate(s.next_delivery_date)}</td>
-                <td style={{ padding: '12px 14px', color: '#888', whiteSpace: 'nowrap' }}>{fmtDate(s.start_date)}</td>
-                <td style={{ padding: '12px 14px', fontWeight: 700, color: '#4a7c59' }}>{inr(s.plans?.price_inr || 0)}</td>
+                <td data-label="Plan" style={{ padding: '12px 14px', color: '#444' }}>{s.plans?.name || '—'}</td>
+                <td data-label="Audience" style={{ padding: '12px 14px', textTransform: 'capitalize', color: '#666' }}>{s.plans?.audience || '—'}</td>
+                <td data-label="Status" style={{ padding: '12px 14px' }}><StatusBadge status={s.status} /></td>
+                <td data-label="Next Delivery" style={{ padding: '12px 14px', color: s.status === 'paused' ? '#aaa' : '#444', whiteSpace: 'nowrap' }}>{s.status === 'paused' ? <em>Paused</em> : fmtDate(s.next_delivery_date)}</td>
+                <td data-label="Started" style={{ padding: '12px 14px', color: '#888', whiteSpace: 'nowrap' }}>{fmtDate(s.start_date)}</td>
+                <td data-label="Price" style={{ padding: '12px 14px', fontWeight: 700, color: '#4a7c59' }}>{inr(s.plans?.price_inr || 0)}</td>
               </tr>
             ))}
           </tbody>
@@ -592,12 +592,12 @@ function OrdersTab({ orders, setOrders, onRefresh }) {
               <tr><td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: '#bbb', fontSize: 14 }}>No orders.</td></tr>
             ) : filtered.map((o, i) => (
               <tr key={o.id} style={{ background: i % 2 === 0 ? '#fff' : '#fafaf7' }}>
-                <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#666' }}>{fmtDate(o.created_at)}</td>
-                <td style={{ padding: '12px 14px' }}>
+                <td data-label="Date" style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#666' }}>{fmtDate(o.created_at)}</td>
+                <td data-label="Customer" style={{ padding: '12px 14px' }}>
                   <div style={{ fontWeight: 600, color: '#222' }}>{o.profiles?.full_name || '—'}</div>
                   <div style={{ color: '#999', fontSize: 11 }}>{o.profiles?.email || ''}</div>
                 </td>
-                <td style={{ padding: '12px 14px' }}>
+                <td data-label="Amount" style={{ padding: '12px 14px' }}>
                   <div style={{ fontWeight: 700, color: '#222' }}>{inr(o.amount_inr)}</div>
                   {Array.isArray(o.items) && o.items.length > 0 ? (
                     <div style={{ marginTop: 4, fontSize: 11, color: '#888', lineHeight: 1.4 }}>
@@ -609,10 +609,10 @@ function OrdersTab({ orders, setOrders, onRefresh }) {
                     <div style={{ marginTop: 4, fontSize: 11, color: '#aaa' }}>Subscription</div>
                   ) : null}
                 </td>
-                <td style={{ padding: '12px 14px' }}><StatusBadge status={o.status} /></td>
-                <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontSize: 11, color: '#888' }}>{o.razorpay_order_id || '—'}</td>
-                <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#888' }}>{o.paid_at ? fmtDate(o.paid_at) : '—'}</td>
-                <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                <td data-label="Status" style={{ padding: '12px 14px' }}><StatusBadge status={o.status} /></td>
+                <td data-label="Razorpay ID" style={{ padding: '12px 14px', fontFamily: 'monospace', fontSize: 11, color: '#888' }}>{o.razorpay_order_id || '—'}</td>
+                <td data-label="Paid At" style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#888' }}>{o.paid_at ? fmtDate(o.paid_at) : '—'}</td>
+                <td data-label="Actions" style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
                     {NEXT_STEP[o.status] && (
                       <button
@@ -883,18 +883,18 @@ function PlansTab({ plans, setPlans, busy, setBusy, setMsg }) {
                   const i = plans.findIndex((x) => x.id === p.id);
                   return (
                     <tr key={p.id}>
-                      {[['name',140],['price_inr',80],['deliveries',70],['serving_label',170],['varieties_label',170],['savings_pct',55],['tag',90]].map(([k, w]) => (
-                        <td key={k} style={{ padding: '8px 6px' }}>
-                          <input style={{ ...inputStyle, padding: '8px 10px', width: w }}
+                      {[['name','Name',140],['price_inr','Price',80],['deliveries','Deliveries',70],['serving_label','Serving',170],['varieties_label','Varieties',170],['savings_pct','Save %',55],['tag','Tag',90]].map(([k, label, w]) => (
+                        <td key={k} data-label={label} style={{ padding: '8px 6px' }}>
+                          <input style={{ ...inputStyle, padding: '8px 10px', width: w, maxWidth: '100%' }}
                             value={plans[i]?.[k] ?? ''}
                             onChange={(e) => setPlans((ps) => ps.map((x, j) => j === i ? { ...x, [k]: e.target.value } : x))} />
                         </td>
                       ))}
-                      <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                      <td data-label="Active" style={{ padding: '8px 10px', textAlign: 'center' }}>
                         <input type="checkbox" checked={Boolean(plans[i]?.is_active)}
                           onChange={(e) => setPlans((ps) => ps.map((x, j) => j === i ? { ...x, is_active: e.target.checked } : x))} />
                       </td>
-                      <td style={{ padding: '8px 10px' }}>
+                      <td data-label="" style={{ padding: '8px 10px' }}>
                         <button onClick={() => savePlan(plans[i])} disabled={busy}
                           style={{ background: '#4a7c59', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                           SAVE
