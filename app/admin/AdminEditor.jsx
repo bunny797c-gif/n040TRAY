@@ -1483,6 +1483,30 @@ function VarietiesTab() {
 // ── Sunday Packing Tab ───────────────────────────────────────────────────
 function SundayPackingTab({ subscriptions, stats }) {
   const nextSunday = stats.nextSundayStr;
+  const [deliveredIds, setDeliveredIds] = useState({});
+  const [advancingIds, setAdvancingIds] = useState({});
+
+  async function markDelivered(sub) {
+    setDeliveredIds((p) => ({ ...p, [sub.id]: 'loading' }));
+    const res = await fetch('/api/admin/subscriptions', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: sub.id, action: 'deliver' }),
+    });
+    if (res.ok) setDeliveredIds((p) => ({ ...p, [sub.id]: 'done' }));
+    else setDeliveredIds((p) => ({ ...p, [sub.id]: 'error' }));
+  }
+
+  async function advanceDate(sub) {
+    setAdvancingIds((p) => ({ ...p, [sub.id]: 'loading' }));
+    const res = await fetch('/api/admin/subscriptions', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: sub.id, action: 'advance' }),
+    });
+    if (res.ok) setAdvancingIds((p) => ({ ...p, [sub.id]: 'done' }));
+    else setAdvancingIds((p) => ({ ...p, [sub.id]: 'error' }));
+  }
 
   // Split into delivering vs skipped/paused
   const delivering = subscriptions.filter(
@@ -1698,12 +1722,22 @@ function SundayPackingTab({ subscriptions, stats }) {
                       <div style={{ fontSize: 12, color: '#666', marginTop: 3 }}>📞 {phone}</div>
                       {line && <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{line}{pincode ? `, ${pincode}` : ''}</div>}
                     </div>
-                    {/* What to pack */}
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 11, color: '#aaa', marginBottom: 2 }}>Pack</div>
+                    {/* What to pack + Mark Delivered */}
+                    <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: packColor(audience), background: packBg(audience), padding: '4px 10px', borderRadius: 8 }}>
                         {packLabel(audience)}
                       </div>
+                      {deliveredIds[s.id] === 'done' ? (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#4a7c59' }}>✅ Delivered</span>
+                      ) : (
+                        <button
+                          onClick={() => markDelivered(s)}
+                          disabled={deliveredIds[s.id] === 'loading'}
+                          style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, border: '1.5px solid #4a7c59', background: '#fff', color: '#4a7c59', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          {deliveredIds[s.id] === 'loading' ? '…' : '✓ Mark Delivered'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -1722,17 +1756,31 @@ function SundayPackingTab({ subscriptions, stats }) {
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #eee', overflow: 'hidden' }}>
             {[...paused, ...notThisSunday].map((s, i) => {
               const name = s.addresses?.full_name || s.profiles?.full_name || '—';
+              const isStale = s.status === 'active' && s.next_delivery_date < nextSunday;
               const reason = s.status === 'paused' ? '⏸ Paused' : `⏭ Next: ${fmtDate(s.next_delivery_date)}`;
               return (
-                <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', background: i % 2 === 0 ? '#fff' : '#fafaf7', borderBottom: '1px solid #f0f0ea' }}>
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', background: i % 2 === 0 ? '#fff' : '#fafaf7', borderBottom: '1px solid #f0f0ea', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 16 }}>{s.status === 'paused' ? '⏸️' : '⏭️'}</span>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontWeight: 600, color: '#555', fontSize: 13 }}>{name}</span>
                     <span style={{ marginLeft: 8, fontSize: 12, color: '#999' }}>{s.plans?.name}</span>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: s.status === 'paused' ? '#5c7aaa' : '#888', background: s.status === 'paused' ? '#e8edf5' : '#f5f5f0', padding: '3px 10px', borderRadius: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: s.status === 'paused' ? '#5c7aaa' : isStale ? '#c0392b' : '#888', background: s.status === 'paused' ? '#e8edf5' : isStale ? '#fdecea' : '#f5f5f0', padding: '3px 10px', borderRadius: 8 }}>
                     {reason}
                   </span>
+                  {isStale && (
+                    advancingIds[s.id] === 'done' ? (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#4a7c59' }}>✓ Updated</span>
+                    ) : (
+                      <button
+                        onClick={() => advanceDate(s)}
+                        disabled={advancingIds[s.id] === 'loading'}
+                        style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 8, border: '1.5px solid #c0392b', background: '#fff', color: '#c0392b', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      >
+                        {advancingIds[s.id] === 'loading' ? '…' : '⟳ Fix Date'}
+                      </button>
+                    )
+                  )}
                 </div>
               );
             })}
