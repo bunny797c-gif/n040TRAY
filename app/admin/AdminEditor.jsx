@@ -4,6 +4,7 @@ import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ReferralsTab from './ReferralsTab';
+import DeliveriesTab from './DeliveriesTab';
 
 // Editable sections — matches what page.jsx actually reads via t()
 const SECTION_DEFS = [
@@ -1843,6 +1844,7 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
   const TABS = [
     { id: 'overview',    label: 'Overview',       icon: '📊' },
     { id: 'sunday',      label: 'This Sunday',    icon: '📦' },
+    { id: 'deliveries',  label: 'Deliveries',     icon: '🚚' },
     { id: 'subscribers', label: 'Subscribers',    icon: '🌱' },
     { id: 'orders',      label: 'Orders',          icon: '💳' },
     { id: 'content',     label: 'Page Content',    icon: '✏️' },
@@ -1904,6 +1906,7 @@ export default function AdminEditor({ initialContent, initialPlans, initialPinco
 
           {tab === 'overview'    && <OverviewTab stats={stats} subscriptions={subscriptions} orders={orders} />}
           {tab === 'sunday'      && <SundayPackingTab subscriptions={subscriptions} stats={stats} />}
+          {tab === 'deliveries'  && <DeliveriesTab />}
           {tab === 'subscribers' && <SubscribersTab subscriptions={subscriptions} />}
           {tab === 'orders'      && <OrdersTab orders={orders} setOrders={setOrders} onRefresh={fetchLatest} />}
           {tab === 'content'     && <ContentTab content={content} setContent={setContent} dirty={dirty} setDirty={setDirty} busy={busy} setBusy={setBusy} setMsg={setMsg} />}

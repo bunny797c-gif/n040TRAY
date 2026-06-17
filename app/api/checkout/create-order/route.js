@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Razorpay from 'razorpay';
 import { sendOrderConfirmation } from '@/lib/email';
 import { nextSundayIST, todayIST } from '@/lib/dates';
+import { scheduleDeliveries } from '@/lib/scheduleDeliveries';
 
 export async function POST(req) {
   const supabase = createClient();
@@ -122,6 +123,11 @@ export async function POST(req) {
     // Stub: mark as paid immediately so user can test flow without Razorpay keys
     await supabase.from('orders').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', order.id);
     await supabase.from('subscriptions').update({ status: 'active' }).eq('id', sub.id);
+    // Schedule all delivery slots for this subscription
+    try {
+      const { createAdminClient } = await import('@/lib/supabase/admin');
+      await scheduleDeliveries(createAdminClient(), { id: sub.id, user_id: user.id, next_delivery_date: sub.next_delivery_date }, plan.deliveries);
+    } catch {}
     try {
       await sendOrderConfirmation(user.email, {
         name: addr.full_name,

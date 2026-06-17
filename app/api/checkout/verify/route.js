@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { sendOrderConfirmation } from '@/lib/email';
+import { scheduleDeliveries } from '@/lib/scheduleDeliveries';
 
 export async function POST(req) {
   const supabase = createClient();
@@ -25,12 +27,7 @@ export async function POST(req) {
 
   await supabase
     .from('orders')
-    .update({
-      status: 'paid',
-      razorpay_payment_id,
-      razorpay_signature,
-      paid_at: new Date().toISOString(),
-    })
+    .update({ status: 'paid', razorpay_payment_id, razorpay_signature, paid_at: new Date().toISOString() })
     .eq('id', order_db_id)
     .eq('user_id', user.id);
 
@@ -40,15 +37,19 @@ export async function POST(req) {
     .eq('id', subscription_id)
     .eq('user_id', user.id);
 
-  // Fire and forget — don't block the response on email
+  // Schedule all delivery slots
   try {
-    const { data: order } = await supabase.from('orders').select('amount_inr, subscription_id').eq('id', order_db_id).maybeSingle();
-    const { data: sub } = await supabase
+    const admin = createAdminClient();
+    const { data: sub } = await admin
       .from('subscriptions')
-      .select('next_delivery_date, plans(name, audience, deliveries), addresses(full_name, phone, line1, line2, city, state, pincode)')
+      .select('id, user_id, next_delivery_date, plans(deliveries, name, audience), addresses(full_name, phone, line1, line2, city, state, pincode)')
       .eq('id', subscription_id)
-      .maybeSingle();
+      .single();
 
+    await scheduleDeliveries(admin, sub, sub.plans.deliveries);
+
+    // Email confirmation
+    const { data: order } = await admin.from('orders').select('amount_inr').eq('id', order_db_id).maybeSingle();
     await sendOrderConfirmation(user.email, {
       name: sub?.addresses?.full_name,
       planName: sub?.plans?.name,
@@ -59,7 +60,7 @@ export async function POST(req) {
       address: sub?.addresses,
     });
   } catch (e) {
-    console.warn('[verify] email send skipped', e?.message || e);
+    console.warn('[verify] post-activation tasks skipped', e?.message || e);
   }
 
   // Trigger referral reward (fire and forget)
