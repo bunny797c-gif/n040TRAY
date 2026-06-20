@@ -72,7 +72,7 @@ export default function OrdersScreen() {
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: COLORS.naturalBg }}>
       <View className="px-5 pt-4 pb-2 flex-row items-center">
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace("/(customer)/(tabs)/account")} className="mr-3">
           <Ionicons name="arrow-back" size={22} color={COLORS.ink} />
         </TouchableOpacity>
         <Text className="text-xl font-semibold" style={{ color: COLORS.ink }}>Orders</Text>

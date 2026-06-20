@@ -70,11 +70,19 @@ function PlansPanel({ plans, setPlans, setMsg }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Locations panel (serviceable pincodes)
+// Locations panel (serviceable pincodes + localities)
 // ══════════════════════════════════════════════════════════════════════════
 function LocationsPanel({ pincodes, setPincodes, setMsg }) {
   const [newPin, setNewPin] = useState({ pincode: '', city: '', state: 'Andhra Pradesh' });
   const [busy, setBusy] = useState(false);
+  const [expandedPin, setExpandedPin] = useState(null);
+  const [localities, setLocalities] = useState({});
+  const [newLocality, setNewLocality] = useState({ name: '', type: 'area' });
+  const [bulkText, setBulkText] = useState('');
+  const [bulkType, setBulkType] = useState('area');
+  const [fetchedFromApi, setFetchedFromApi] = useState({});
+  const [selectedFetched, setSelectedFetched] = useState({});
+  const [fetching, setFetching] = useState(false);
 
   async function addPincode() {
     if (!/^\d{6}$/.test(newPin.pincode) || !newPin.city) return setMsg?.({ type: 'error', text: 'Enter a 6-digit pincode and a city.' });
@@ -95,11 +103,121 @@ function LocationsPanel({ pincodes, setPincodes, setMsg }) {
     if (res.ok) setPincodes((p) => p.map((x) => x.pincode === row.pincode ? { ...x, is_active: !row.is_active } : x));
   }
 
+  async function loadLocalities(pincode) {
+    const res = await fetch(`/api/admin/localities?pincode=${pincode}`);
+    const data = await res.json();
+    if (res.ok) setLocalities((prev) => ({ ...prev, [pincode]: data.localities }));
+  }
+
+  async function toggleExpand(pincode) {
+    if (expandedPin === pincode) { setExpandedPin(null); return; }
+    setExpandedPin(pincode);
+    setNewLocality({ name: '', type: 'area' });
+    setBulkText('');
+    if (!localities[pincode]) await loadLocalities(pincode);
+  }
+
+  async function addLocality(pincode) {
+    if (!newLocality.name.trim()) return;
+    setBusy(true);
+    const res = await fetch('/api/admin/localities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add', pincode, name: newLocality.name, locality_type: newLocality.type }) });
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) return setMsg?.({ type: 'error', text: data.error || 'Failed' });
+    setLocalities((prev) => ({ ...prev, [pincode]: [...(prev[pincode] || []), data.locality].sort((a, b) => a.name.localeCompare(b.name)) }));
+    setNewLocality({ name: '', type: newLocality.type });
+    setMsg?.({ type: 'ok', text: `Added "${data.locality.name}"` });
+  }
+
+  async function bulkAddLocalities(pincode) {
+    const names = bulkText.split('\n').map((s) => s.trim()).filter(Boolean);
+    if (!names.length) return;
+    setBusy(true);
+    const res = await fetch('/api/admin/localities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'bulk_add', pincode, names, locality_type: bulkType }) });
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) return setMsg?.({ type: 'error', text: data.error || 'Failed' });
+    setLocalities((prev) => ({ ...prev, [pincode]: [...(prev[pincode] || []).filter((l) => !data.localities.find((n) => n.id === l.id)), ...data.localities].sort((a, b) => a.name.localeCompare(b.name)) }));
+    setBulkText('');
+    setMsg?.({ type: 'ok', text: `Added ${data.localities.length} localities` });
+  }
+
+  async function toggleLocality(pincode, loc) {
+    const res = await fetch('/api/admin/localities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'toggle', id: loc.id, is_active: !loc.is_active }) });
+    if (res.ok) setLocalities((prev) => ({ ...prev, [pincode]: (prev[pincode] || []).map((l) => l.id === loc.id ? { ...l, is_active: !loc.is_active } : l) }));
+  }
+
+  async function deleteLocality(pincode, loc) {
+    if (!confirm(`Delete "${loc.name}"?`)) return;
+    const res = await fetch('/api/admin/localities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete', id: loc.id }) });
+    if (res.ok) setLocalities((prev) => ({ ...prev, [pincode]: (prev[pincode] || []).filter((l) => l.id !== loc.id) }));
+  }
+
+  async function fetchFromIndiaPost(pincode) {
+    setFetching(true);
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      const json = await res.json();
+      if (json[0]?.Status === 'Success' && json[0]?.PostOffice?.length) {
+        const existingNames = new Set((localities[pincode] || []).map((l) => l.name.toLowerCase()));
+        const offices = json[0].PostOffice.map((po) => ({
+          name: po.Name,
+          type: po.BranchType === 'Head Post Office' ? 'town' : 'area',
+          block: po.Block,
+        })).filter((o) => !existingNames.has(o.name.toLowerCase()));
+        setFetchedFromApi((prev) => ({ ...prev, [pincode]: offices }));
+        const all = {};
+        offices.forEach((_, i) => { all[i] = true; });
+        setSelectedFetched((prev) => ({ ...prev, [pincode]: all }));
+        if (offices.length === 0) setMsg?.({ type: 'ok', text: 'All localities from India Post are already added.' });
+      } else {
+        setMsg?.({ type: 'error', text: 'No data found from India Post for this pincode.' });
+        setFetchedFromApi((prev) => ({ ...prev, [pincode]: [] }));
+      }
+    } catch {
+      setMsg?.({ type: 'error', text: 'Failed to fetch from India Post API.' });
+    }
+    setFetching(false);
+  }
+
+  function toggleFetchedSelection(pincode, idx) {
+    setSelectedFetched((prev) => ({
+      ...prev,
+      [pincode]: { ...(prev[pincode] || {}), [idx]: !(prev[pincode] || {})[idx] },
+    }));
+  }
+
+  function selectAllFetched(pincode, select) {
+    const all = {};
+    (fetchedFromApi[pincode] || []).forEach((_, i) => { all[i] = select; });
+    setSelectedFetched((prev) => ({ ...prev, [pincode]: all }));
+  }
+
+  async function saveSelectedFetched(pincode) {
+    const offices = fetchedFromApi[pincode] || [];
+    const sel = selectedFetched[pincode] || {};
+    const names = offices.filter((_, i) => sel[i]).map((o) => o.name);
+    if (!names.length) return setMsg?.({ type: 'error', text: 'Select at least one locality to save.' });
+    setBusy(true);
+    const res = await fetch('/api/admin/localities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'bulk_add', pincode, names, locality_type: 'area' }) });
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) return setMsg?.({ type: 'error', text: data.error || 'Failed' });
+    setLocalities((prev) => ({ ...prev, [pincode]: [...(prev[pincode] || []).filter((l) => !data.localities.find((n) => n.id === l.id)), ...data.localities].sort((a, b) => a.name.localeCompare(b.name)) }));
+    setFetchedFromApi((prev) => ({ ...prev, [pincode]: [] }));
+    setSelectedFetched((prev) => ({ ...prev, [pincode]: {} }));
+    setMsg?.({ type: 'ok', text: `Saved ${data.localities.length} localities from India Post` });
+  }
+
+  const TYPE_LABELS = { village: '🏘️ Village', street: '🛣️ Street', colony: '🏠 Colony', road: '🚗 Road', area: '📍 Area', town: '🏙️ Town' };
+
   return (
-    <div style={{ maxWidth: 600 }}>
+    <div style={{ maxWidth: 700 }}>
       <p style={{ margin: '0 0 20px', fontSize: 13, color: '#999' }}>
-        Customers can only order if their pincode is active here. {pincodes.filter((p) => p.is_active).length} active · {pincodes.filter((p) => !p.is_active).length} disabled.
+        Manage pincodes and their localities (villages, streets, colonies). Customers select their locality during signup and checkout.
       </p>
+
+      {/* Add pincode */}
       <div style={{ background: '#f9f9f6', borderRadius: 14, padding: 18, marginBottom: 24, border: '1px solid #eee' }}>
         <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: 0.5 }}>Add Pincode</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -109,19 +227,121 @@ function LocationsPanel({ pincodes, setPincodes, setMsg }) {
           <button onClick={addPincode} disabled={busy} style={{ background: '#4a7c59', color: '#fff', border: 'none', borderRadius: 10, padding: '0 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>ADD</button>
         </div>
       </div>
+
+      {/* Pincodes list */}
       <div style={{ borderRadius: 12, border: '1px solid #eee', overflow: 'hidden' }}>
         {pincodes.length === 0 && <p style={{ padding: 24, textAlign: 'center', color: '#bbb', fontSize: 13 }}>No pincodes yet.</p>}
-        {pincodes.map((row, i) => (
-          <div key={row.pincode} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', fontSize: 14, background: i % 2 === 0 ? '#fff' : '#fafaf7', borderBottom: i < pincodes.length - 1 ? '1px solid #f0f0ea' : 'none' }}>
-            <span>
-              <strong style={{ fontFamily: 'monospace', fontSize: 15 }}>{row.pincode}</strong>
-              <span style={{ color: '#888', marginLeft: 12 }}>{row.city}, {row.state}</span>
-            </span>
-            <button onClick={() => togglePincode(row)} disabled={busy} style={{ border: 'none', borderRadius: 20, padding: '6px 14px', fontWeight: 700, fontSize: 11, cursor: 'pointer', background: row.is_active ? '#e8f5e0' : '#fdecea', color: row.is_active ? '#3d6b2e' : '#b0281e' }}>
-              {row.is_active ? '✓ Active' : '✗ Disabled'}
-            </button>
-          </div>
-        ))}
+        {pincodes.map((row) => {
+          const isExpanded = expandedPin === row.pincode;
+          const locs = localities[row.pincode] || [];
+          const activeCount = locs.filter((l) => l.is_active).length;
+          return (
+            <div key={row.pincode} style={{ borderBottom: '1px solid #f0f0ea' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', fontSize: 14, background: isExpanded ? '#f7fbf3' : '#fff', cursor: 'pointer' }} onClick={() => toggleExpand(row.pincode)}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 11, color: '#aaa' }}>{isExpanded ? '▼' : '▶'}</span>
+                  <strong style={{ fontFamily: 'monospace', fontSize: 15 }}>{row.pincode}</strong>
+                  <span style={{ color: '#888' }}>{row.city}, {row.state}</span>
+                  {locs.length > 0 && <span style={{ fontSize: 11, color: '#4a7c59', background: '#e8f5e0', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>{activeCount} localities</span>}
+                </span>
+                <button onClick={(e) => { e.stopPropagation(); togglePincode(row); }} disabled={busy} style={{ border: 'none', borderRadius: 20, padding: '6px 14px', fontWeight: 700, fontSize: 11, cursor: 'pointer', background: row.is_active ? '#e8f5e0' : '#fdecea', color: row.is_active ? '#3d6b2e' : '#b0281e' }}>
+                  {row.is_active ? '✓ Active' : '✗ Disabled'}
+                </button>
+              </div>
+
+              {isExpanded && (
+                <div style={{ padding: '0 16px 16px', background: '#fafdf7' }}>
+                  {/* Auto-fetch from India Post */}
+                  {!(fetchedFromApi[row.pincode]?.length > 0) && (
+                    <button
+                      onClick={() => fetchFromIndiaPost(row.pincode)}
+                      disabled={fetching || busy}
+                      style={{ marginTop: 12, width: '100%', background: 'linear-gradient(135deg, #4a7c59, #3d6b2e)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                    >
+                      {fetching ? '⏳ Fetching…' : '🔍 Auto-fetch localities from India Post'}
+                    </button>
+                  )}
+
+                  {(fetchedFromApi[row.pincode]?.length > 0) && (
+                    <div style={{ marginTop: 12, background: '#fff', borderRadius: 10, border: '1px solid #dce8d4', overflow: 'hidden' }}>
+                      <div style={{ padding: '10px 12px', background: '#e8f5e0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#3d6b2e' }}>
+                          📮 {fetchedFromApi[row.pincode].length} localities found from India Post
+                        </span>
+                        <span style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={() => selectAllFetched(row.pincode, true)} style={{ border: 'none', background: 'none', color: '#4a7c59', fontSize: 11, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>Select all</button>
+                          <button onClick={() => selectAllFetched(row.pincode, false)} style={{ border: 'none', background: 'none', color: '#999', fontSize: 11, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>Deselect all</button>
+                        </span>
+                      </div>
+                      <div style={{ maxHeight: 240, overflowY: 'auto', padding: '6px 0' }}>
+                        {fetchedFromApi[row.pincode].map((office, idx) => {
+                          const checked = (selectedFetched[row.pincode] || {})[idx];
+                          return (
+                            <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, background: idx % 2 === 0 ? '#fff' : '#fafaf7' }}>
+                              <input type="checkbox" checked={!!checked} onChange={() => toggleFetchedSelection(row.pincode, idx)} style={{ accentColor: '#4a7c59' }} />
+                              <span style={{ fontWeight: 600, color: '#333' }}>{office.name}</span>
+                              {office.block && <span style={{ fontSize: 10, color: '#aaa' }}>({office.block})</span>}
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div style={{ padding: '10px 12px', borderTop: '1px solid #e8e8e0', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <button onClick={() => { setFetchedFromApi((prev) => ({ ...prev, [row.pincode]: [] })); setSelectedFetched((prev) => ({ ...prev, [row.pincode]: {} })); }} style={{ border: '1px solid #ddd', background: '#fff', borderRadius: 8, padding: '8px 16px', fontSize: 12, cursor: 'pointer', color: '#888' }}>Cancel</button>
+                        <button onClick={() => saveSelectedFetched(row.pincode)} disabled={busy} style={{ background: '#4a7c59', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                          💾 Save selected ({Object.values(selectedFetched[row.pincode] || {}).filter(Boolean).length})
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add single locality */}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <input style={{ ...inputStyle, flex: 1, minWidth: 160 }} placeholder="Locality name (e.g. Tiruchanoor)" value={newLocality.name} onChange={(e) => setNewLocality((n) => ({ ...n, name: e.target.value }))} onKeyDown={(e) => e.key === 'Enter' && addLocality(row.pincode)} />
+                    <select style={{ ...inputStyle, width: 'auto', padding: '8px 12px', cursor: 'pointer' }} value={newLocality.type} onChange={(e) => setNewLocality((n) => ({ ...n, type: e.target.value }))}>
+                      {Object.entries(TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
+                    <button onClick={() => addLocality(row.pincode)} disabled={busy || !newLocality.name.trim()} style={{ background: '#4a7c59', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>+ Add</button>
+                  </div>
+
+                  {/* Bulk add */}
+                  <details style={{ marginTop: 12 }}>
+                    <summary style={{ fontSize: 11, color: '#888', cursor: 'pointer', fontWeight: 600 }}>Bulk add (one per line)</summary>
+                    <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <textarea style={{ ...inputStyle, flex: 1, minWidth: 200, minHeight: 70, resize: 'vertical', fontSize: 12 }} placeholder="Tiruchanoor&#10;Chandragiri&#10;Renigunta" value={bulkText} onChange={(e) => setBulkText(e.target.value)} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <select style={{ ...inputStyle, padding: '6px 10px', fontSize: 11 }} value={bulkType} onChange={(e) => setBulkType(e.target.value)}>
+                          {Object.entries(TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        </select>
+                        <button onClick={() => bulkAddLocalities(row.pincode)} disabled={busy || !bulkText.trim()} style={{ background: '#4a7c59', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>Add all</button>
+                      </div>
+                    </div>
+                  </details>
+
+                  {/* Localities list */}
+                  {locs.length > 0 && (
+                    <div style={{ marginTop: 14, borderRadius: 10, border: '1px solid #e8e8e0', overflow: 'hidden' }}>
+                      {locs.map((loc, i) => (
+                        <div key={loc.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', fontSize: 13, background: i % 2 === 0 ? '#fff' : '#fafaf7', borderBottom: i < locs.length - 1 ? '1px solid #f0f0ea' : 'none', opacity: loc.is_active ? 1 : 0.5 }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 10, color: '#aaa', background: '#f0f0ea', padding: '1px 6px', borderRadius: 6, fontWeight: 600, textTransform: 'uppercase' }}>{loc.locality_type}</span>
+                            <span style={{ fontWeight: 600, color: '#333' }}>{loc.name}</span>
+                          </span>
+                          <span style={{ display: 'flex', gap: 6 }}>
+                            <button onClick={() => toggleLocality(row.pincode, loc)} style={{ border: 'none', borderRadius: 12, padding: '3px 10px', fontWeight: 700, fontSize: 10, cursor: 'pointer', background: loc.is_active ? '#e8f5e0' : '#fdecea', color: loc.is_active ? '#3d6b2e' : '#b0281e' }}>
+                              {loc.is_active ? '✓' : '✗'}
+                            </button>
+                            <button onClick={() => deleteLocality(row.pincode, loc)} style={{ border: 'none', background: 'none', color: '#ccc', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}>🗑️</button>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {locs.length === 0 && <p style={{ margin: '14px 0 0', fontSize: 12, color: '#bbb', textAlign: 'center' }}>No localities added yet. Add villages, streets, colonies for this pincode.</p>}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

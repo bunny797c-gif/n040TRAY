@@ -35,6 +35,8 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
   const [referralStatus, setReferralStatus] = useState(null); // null | { valid, message }
   const [referralBusy, setReferralBusy] = useState(false);
   const [discountInr, setDiscountInr] = useState(0);
+  const [localities, setLocalities] = useState([]);
+  const [selectedLocality, setSelectedLocality] = useState('');
 
 
   // Phone OTP state
@@ -88,8 +90,15 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
     if (data.serviceable) {
       setPinStatus({ ok: true, message: `✓ We deliver to ${data.city}` });
       setForm((f) => ({ ...f, city: data.city, state: data.state }));
+      try {
+        const locRes = await fetch(`/api/localities?pincode=${value}`);
+        const locData = await locRes.json();
+        setLocalities(locData.localities || []);
+        setSelectedLocality('');
+      } catch { setLocalities([]); }
     } else {
       setPinStatus({ ok: false, message: data.message || data.error });
+      setLocalities([]);
     }
   }
 
@@ -302,27 +311,7 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
         <div className="cf-section">
           <p className="cf-section-label">Delivery Address</p>
 
-          <div className="cf-field">
-            <label>Address Line 1</label>
-            <input required placeholder="Flat / House no., Building, Street" value={form.line1} onChange={(e) => update('line1', e.target.value)} />
-          </div>
-
-          <div className="cf-field">
-            <label>Address Line 2 <span style={{ fontWeight: 400, color: '#aaa' }}>(optional)</span></label>
-            <input placeholder="Landmark, area, colony" value={form.line2} onChange={(e) => update('line2', e.target.value)} />
-          </div>
-
-          <div className="form-row">
-            <div className="cf-field">
-              <label>City</label>
-              <input required value={form.city} onChange={(e) => update('city', e.target.value)} />
-            </div>
-            <div className="cf-field">
-              <label>State</label>
-              <input required value={form.state} onChange={(e) => update('state', e.target.value)} />
-            </div>
-          </div>
-
+          {/* Pincode first */}
           <div className="cf-field" style={{ maxWidth: 180 }}>
             <label>Pincode</label>
             <input
@@ -335,6 +324,50 @@ export default function CheckoutClient({ plan, profile, defaultAddress, userEmai
             {pinStatus?.checking && <p className="cf-hint cf-hint--checking">Checking…</p>}
             {pinStatus?.ok && <p className="cf-hint cf-hint--ok">{pinStatus.message}</p>}
             {pinStatus?.ok === false && <p className="cf-hint cf-hint--err">{pinStatus.message}</p>}
+          </div>
+
+          {/* Locality / Area */}
+          {pinStatus?.ok && localities.length > 0 && (
+            <div className="cf-field">
+              <label>Locality / Area</label>
+              <select
+                value={selectedLocality}
+                onChange={(e) => {
+                  setSelectedLocality(e.target.value);
+                  if (e.target.value) update('line2', e.target.value);
+                }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #dce8d4', fontSize: 14, background: '#fff', color: '#2d3a28' }}
+              >
+                <option value="">Select your locality</option>
+                {localities.map((loc) => (
+                  <option key={loc.id} value={loc.name}>{loc.name} ({loc.locality_type})</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Street */}
+          <div className="cf-field">
+            <label>Street / Area</label>
+            <input required placeholder="Street, colony, area name" value={form.line1} onChange={(e) => update('line1', e.target.value)} />
+          </div>
+
+          {/* Door number */}
+          <div className="cf-field">
+            <label>Door / Flat No. <span style={{ fontWeight: 400, color: '#aaa' }}>(optional)</span></label>
+            <input placeholder="e.g. 4-12, Flat 301" value={form.line2} onChange={(e) => update('line2', e.target.value)} />
+          </div>
+
+          {/* City & State auto-filled */}
+          <div className="form-row">
+            <div className="cf-field">
+              <label>City</label>
+              <input required value={form.city} readOnly={!!pinStatus?.ok} style={pinStatus?.ok ? { color: '#999', background: '#f5f5f0' } : {}} onChange={(e) => update('city', e.target.value)} />
+            </div>
+            <div className="cf-field">
+              <label>State</label>
+              <input required value={form.state} readOnly={!!pinStatus?.ok} style={pinStatus?.ok ? { color: '#999', background: '#f5f5f0' } : {}} onChange={(e) => update('state', e.target.value)} />
+            </div>
           </div>
         </div>
 

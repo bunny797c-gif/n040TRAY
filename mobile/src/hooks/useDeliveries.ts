@@ -8,9 +8,8 @@ export interface Delivery {
   user_id: string;
   scheduled_date: string;
   status: "scheduled" | "picked_up" | "in_transit" | "delivered" | "failed" | "skipped";
-  delivery_partner_id: string | null;
-  picked_up_at: string | null;
-  failed_reason: string | null;
+  delivered_at: string | null;
+  varieties: string[] | null;
   notes: string | null;
   created_at: string;
 }

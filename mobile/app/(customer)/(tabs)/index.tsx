@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProducts, packPrice, type Product } from "@/hooks/useProducts";
 import { useSubscriptions, usePlans } from "@/hooks/useSubscription";
+import { useDeliveries } from "@/hooks/useDeliveries";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
 import { COLORS } from "@/lib/constants";
@@ -77,6 +78,7 @@ export default function HomeScreen() {
   const { data: products, isLoading } = useProducts();
   const { data: subs } = useSubscriptions();
   const { data: plans } = usePlans();
+  const { data: deliveries } = useDeliveries();
 
   const featured = products?.filter((p) => p.show_on_home || p.featured_home).slice(0, 6)
     ?? products?.slice(0, 6) ?? [];
@@ -84,6 +86,27 @@ export default function HomeScreen() {
   const activeSub = subs?.find((s) => s.status === "active");
   const nextDelivery = activeSub?.next_delivery_date ?? nextSundayIST();
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
+
+  // Find today or tomorrow's delivery
+  const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  const todayStr = todayIST.toISOString().slice(0, 10);
+  const tomorrowIST = new Date(todayIST);
+  tomorrowIST.setDate(tomorrowIST.getDate() + 1);
+  const tomorrowStr = tomorrowIST.toISOString().slice(0, 10);
+
+  const imminent = deliveries?.find(
+    (d) => d.scheduled_date === todayStr || d.scheduled_date === tomorrowStr
+  );
+  const imminentLabel = imminent?.scheduled_date === todayStr ? "Today" : "Tomorrow";
+
+  const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
+    scheduled:  { label: "Scheduled",   color: COLORS.forest,            bg: COLORS.surface },
+    picked_up:  { label: "Picked up",   color: "#92400E",                bg: "#FEF3C7" },
+    in_transit: { label: "On the way",  color: "#92400E",                bg: "#FEF3C7" },
+    delivered:  { label: "Delivered ✓", color: "#065F46",                bg: "#D1FAE5" },
+    failed:     { label: "Failed",      color: COLORS.statusFailedText,  bg: "#FEE2E2" },
+    skipped:    { label: "Skipped",     color: COLORS.inkMuted,          bg: COLORS.surface },
+  };
 
   async function onRefresh() {
     await queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -114,9 +137,45 @@ export default function HomeScreen() {
         {/* Active subscription card */}
         {activeSub ? (
           <View className="mx-5 mt-4 rounded-2xl p-5" style={{ backgroundColor: COLORS.forest }}>
-            <View className="flex-row items-center mb-2">
-              <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: COLORS.coral }} />
-              <Text className="text-xs font-medium" style={{ color: COLORS.sageLight }}>NEXT DELIVERY</Text>
+            {/* Imminent delivery (today / tomorrow) */}
+            {imminent && (
+              <View className="mb-4 pb-4" style={{ borderBottomWidth: 0.5, borderBottomColor: "rgba(255,255,255,0.15)" }}>
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center">
+                    <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: COLORS.coral }} />
+                    <Text className="text-xs font-medium uppercase" style={{ color: COLORS.sageLight }}>
+                      {imminentLabel}'s delivery
+                    </Text>
+                  </View>
+                  {(() => {
+                    const s = STATUS_MAP[imminent.status] ?? STATUS_MAP.scheduled;
+                    return (
+                      <View className="rounded-full px-2.5 py-0.5" style={{ backgroundColor: s.bg }}>
+                        <Text className="text-[10px] font-semibold" style={{ color: s.color }}>{s.label}</Text>
+                      </View>
+                    );
+                  })()}
+                </View>
+                <Text className="text-base font-semibold text-white mt-1">
+                  {formatDate(imminent.scheduled_date)}
+                </Text>
+                {imminent.status === "delivered" && imminent.delivered_at && (
+                  <Text className="text-xs mt-0.5" style={{ color: COLORS.sageLight }}>
+                    {(() => {
+                      const dt = new Date(imminent.delivered_at);
+                      const dateStr = dt.toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
+                      const timeStr = dt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
+                      return `Delivered ${dateStr} at ${timeStr}`;
+                    })()}
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {/* Next upcoming delivery */}
+            <View className="flex-row items-center mb-1">
+              <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: imminent ? "rgba(255,255,255,0.4)" : COLORS.coral }} />
+              <Text className="text-xs font-medium uppercase" style={{ color: COLORS.sageLight }}>Next delivery</Text>
             </View>
             <Text className="text-lg font-semibold text-white">{formatDate(nextDelivery)}</Text>
             <Text className="text-xs mt-1" style={{ color: COLORS.sage }}>

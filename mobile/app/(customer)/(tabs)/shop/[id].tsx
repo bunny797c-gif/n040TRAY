@@ -46,7 +46,7 @@ export default function ProductDetailScreen() {
         <TouchableOpacity
           className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full items-center justify-center"
           style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace("/(customer)/(tabs)/shop")}
         >
           <Ionicons name="arrow-back" size={22} color={COLORS.ink} />
         </TouchableOpacity>
@@ -173,7 +173,7 @@ export default function ProductDetailScreen() {
               price: priceMap[selectedPack],
               image_url: product.image_url,
             });
-            router.back();
+            router.canGoBack() ? router.back() : router.replace("/(customer)/(tabs)/shop");
           }}
         >
           <Text className="text-base font-semibold text-white">

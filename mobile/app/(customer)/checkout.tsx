@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,6 +20,7 @@ import { useCartStore } from "@/stores/cart";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAuthStore } from "@/stores/auth";
 import { apiFetch } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { COLORS } from "@/lib/constants";
 
 type Step = "address" | "otp" | "payment";
@@ -46,6 +49,9 @@ export default function CheckoutScreen() {
   });
   const [pincodeOk, setPincodeOk] = useState<boolean | null>(null);
   const [pincodeMsg, setPincodeMsg] = useState("");
+  const [localities, setLocalities] = useState<{ id: string; name: string; locality_type: string }[]>([]);
+  const [selectedLocality, setSelectedLocality] = useState("");
+  const [localityModalOpen, setLocalityModalOpen] = useState(false);
 
   // OTP
   const [otp, setOtp] = useState("");
@@ -77,16 +83,28 @@ export default function CheckoutScreen() {
       return;
     }
     try {
-      const res = await apiFetch<{ ok: boolean; serviceable: boolean; city?: string; state?: string; message?: string }>(
-        `/api/pincode-check?pincode=${pin}`
-      );
-      if (res.serviceable) {
+      const { data } = await supabase
+        .from("serviceable_pincodes")
+        .select("pincode, city, state")
+        .eq("pincode", pin)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (data) {
         setPincodeOk(true);
-        setPincodeMsg(`${res.city}, ${res.state}`);
-        setAddr((a) => ({ ...a, city: res.city ?? a.city, state: res.state ?? a.state }));
+        setPincodeMsg(`${data.city}, ${data.state}`);
+        setAddr((a) => ({ ...a, city: data.city, state: data.state }));
+        const { data: locs } = await supabase
+          .from("serviceable_localities")
+          .select("id, name, locality_type")
+          .eq("pincode", pin)
+          .eq("is_active", true)
+          .order("name");
+        setLocalities(locs || []);
+        setSelectedLocality("");
       } else {
         setPincodeOk(false);
-        setPincodeMsg(res.message ?? "Not serviceable");
+        setPincodeMsg("We don't deliver here yet — launching soon!");
+        setLocalities([]);
       }
     } catch {
       setPincodeOk(false);
@@ -231,7 +249,7 @@ export default function CheckoutScreen() {
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : "height"}>
         {/* Header */}
         <View className="px-5 pt-4 pb-3 flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-3">
+          <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace("/(customer)/(tabs)")} className="mr-3">
             <Ionicons name="arrow-back" size={22} color={COLORS.ink} />
           </TouchableOpacity>
           <Text className="text-xl font-semibold" style={{ color: COLORS.ink }}>Checkout</Text>
@@ -273,30 +291,38 @@ export default function CheckoutScreen() {
               <Text className="text-base font-semibold mb-3" style={{ color: COLORS.ink }}>
                 Delivery address
               </Text>
-              {[
-                { key: "full_name", label: "Full name", kb: "default" },
-                { key: "phone", label: "Phone (10 digits)", kb: "phone-pad", max: 10 },
-                { key: "line1", label: "Address line 1", kb: "default" },
-                { key: "line2", label: "Landmark (optional)", kb: "default" },
-                { key: "pincode", label: "Pincode", kb: "number-pad", max: 6 },
-                { key: "city", label: "City", kb: "default" },
-                { key: "state", label: "State", kb: "default" },
-              ].map((f) => (
-                <TextInput
-                  key={f.key}
-                  className="rounded-xl px-4 py-3 text-sm mb-2"
-                  style={{ backgroundColor: COLORS.surface, color: COLORS.ink, borderWidth: 0.5, borderColor: COLORS.border }}
-                  placeholder={f.label}
-                  placeholderTextColor={COLORS.inkMuted}
-                  value={(addr as any)[f.key]}
-                  onChangeText={(v) => {
-                    setAddr((a) => ({ ...a, [f.key]: v }));
-                    if (f.key === "pincode") checkPincode(v);
-                  }}
-                  keyboardType={f.kb as any}
-                  maxLength={f.max}
-                />
-              ))}
+
+              {/* Contact */}
+              <TextInput
+                className="rounded-xl px-4 py-3 text-sm mb-2"
+                style={{ backgroundColor: COLORS.surface, color: COLORS.ink, borderWidth: 0.5, borderColor: COLORS.border }}
+                placeholder="Full name"
+                placeholderTextColor={COLORS.inkMuted}
+                value={addr.full_name}
+                onChangeText={(v) => setAddr((a) => ({ ...a, full_name: v }))}
+              />
+              <TextInput
+                className="rounded-xl px-4 py-3 text-sm mb-2"
+                style={{ backgroundColor: COLORS.surface, color: COLORS.ink, borderWidth: 0.5, borderColor: COLORS.border }}
+                placeholder="Phone (10 digits)"
+                placeholderTextColor={COLORS.inkMuted}
+                value={addr.phone}
+                onChangeText={(v) => setAddr((a) => ({ ...a, phone: v }))}
+                keyboardType="phone-pad"
+                maxLength={10}
+              />
+
+              {/* Pincode first */}
+              <TextInput
+                className="rounded-xl px-4 py-3 text-sm mb-2"
+                style={{ backgroundColor: COLORS.surface, color: COLORS.ink, borderWidth: 0.5, borderColor: COLORS.border }}
+                placeholder="Pincode"
+                placeholderTextColor={COLORS.inkMuted}
+                value={addr.pincode}
+                onChangeText={(v) => { setAddr((a) => ({ ...a, pincode: v })); checkPincode(v); }}
+                keyboardType="number-pad"
+                maxLength={6}
+              />
 
               {pincodeOk !== null && (
                 <View className="flex-row items-center mb-2 ml-1">
@@ -313,6 +339,102 @@ export default function CheckoutScreen() {
                   </Text>
                 </View>
               )}
+
+              {/* Locality dropdown */}
+              {pincodeOk && localities.length > 0 && (
+                <View className="mb-2">
+                  <TouchableOpacity
+                    className="rounded-xl px-4 py-3 flex-row items-center justify-between"
+                    style={{ backgroundColor: COLORS.surface, borderWidth: 0.5, borderColor: selectedLocality ? COLORS.forest : COLORS.border }}
+                    onPress={() => setLocalityModalOpen(true)}
+                  >
+                    <Text className="text-sm" style={{ color: selectedLocality ? COLORS.ink : COLORS.inkMuted, fontWeight: selectedLocality ? "600" : "400" }}>
+                      {selectedLocality || "Select your locality / area"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color={COLORS.inkMuted} />
+                  </TouchableOpacity>
+
+                  <Modal visible={localityModalOpen} transparent animationType="slide">
+                    <TouchableOpacity
+                      activeOpacity={1}
+                      onPress={() => setLocalityModalOpen(false)}
+                      style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}
+                    >
+                      <View onStartShouldSetResponder={() => true} style={{ backgroundColor: COLORS.naturalBg, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: "60%", paddingBottom: 30 }}>
+                        <View className="flex-row items-center justify-between px-5 pt-4 pb-3" style={{ borderBottomWidth: 0.5, borderBottomColor: COLORS.border }}>
+                          <Text className="text-base font-semibold" style={{ color: COLORS.ink }}>Select locality</Text>
+                          <TouchableOpacity onPress={() => setLocalityModalOpen(false)}>
+                            <Ionicons name="close" size={22} color={COLORS.inkMuted} />
+                          </TouchableOpacity>
+                        </View>
+                        <FlatList
+                          data={localities}
+                          keyExtractor={(item) => item.id}
+                          renderItem={({ item }) => (
+                            <TouchableOpacity
+                              className="px-5 py-3.5 flex-row items-center justify-between"
+                              style={{ borderBottomWidth: 0.5, borderBottomColor: COLORS.border, backgroundColor: selectedLocality === item.name ? "#f0f7eb" : "transparent" }}
+                              onPress={() => {
+                                setSelectedLocality(item.name);
+                                setAddr((a) => ({ ...a, line2: item.name }));
+                                setLocalityModalOpen(false);
+                              }}
+                            >
+                              <View>
+                                <Text className="text-sm font-semibold" style={{ color: COLORS.ink }}>{item.name}</Text>
+                                <Text className="text-[10px] mt-0.5" style={{ color: COLORS.inkMuted, textTransform: "uppercase" }}>{item.locality_type}</Text>
+                              </View>
+                              {selectedLocality === item.name && <Ionicons name="checkmark-circle" size={20} color={COLORS.forest} />}
+                            </TouchableOpacity>
+                          )}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  </Modal>
+                </View>
+              )}
+
+              {/* Street / address */}
+              <TextInput
+                className="rounded-xl px-4 py-3 text-sm mb-2"
+                style={{ backgroundColor: COLORS.surface, color: COLORS.ink, borderWidth: 0.5, borderColor: COLORS.border }}
+                placeholder="Street / area name"
+                placeholderTextColor={COLORS.inkMuted}
+                value={addr.line1}
+                onChangeText={(v) => setAddr((a) => ({ ...a, line1: v }))}
+              />
+
+              {/* Door number (optional) */}
+              <TextInput
+                className="rounded-xl px-4 py-3 text-sm mb-2"
+                style={{ backgroundColor: COLORS.surface, color: COLORS.ink, borderWidth: 0.5, borderColor: COLORS.border }}
+                placeholder="Door / flat number (optional)"
+                placeholderTextColor={COLORS.inkMuted}
+                value={addr.line2}
+                onChangeText={(v) => setAddr((a) => ({ ...a, line2: v }))}
+              />
+
+              {/* City & State auto-filled, read-only when pincode matched */}
+              <View className="flex-row gap-2 mb-2">
+                <TextInput
+                  className="rounded-xl px-4 py-3 text-sm flex-1"
+                  style={{ backgroundColor: pincodeOk ? COLORS.surface : COLORS.surface, color: pincodeOk ? COLORS.inkMuted : COLORS.ink, borderWidth: 0.5, borderColor: COLORS.border }}
+                  placeholder="City"
+                  placeholderTextColor={COLORS.inkMuted}
+                  value={addr.city}
+                  onChangeText={(v) => setAddr((a) => ({ ...a, city: v }))}
+                  editable={!pincodeOk}
+                />
+                <TextInput
+                  className="rounded-xl px-4 py-3 text-sm flex-1"
+                  style={{ backgroundColor: pincodeOk ? COLORS.surface : COLORS.surface, color: pincodeOk ? COLORS.inkMuted : COLORS.ink, borderWidth: 0.5, borderColor: COLORS.border }}
+                  placeholder="State"
+                  placeholderTextColor={COLORS.inkMuted}
+                  value={addr.state}
+                  onChangeText={(v) => setAddr((a) => ({ ...a, state: v }))}
+                  editable={!pincodeOk}
+                />
+              </View>
 
               {/* Referral code */}
               <TextInput
