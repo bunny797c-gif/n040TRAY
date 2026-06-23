@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(req) {
   const supabase = createClient();
@@ -18,7 +19,8 @@ export async function GET(req) {
     .maybeSingle();
   if (!partner) return NextResponse.json({ error: 'Not a delivery partner' }, { status: 403 });
 
-  const { data: deliveries, error, count } = await supabase
+  const admin = createAdminClient();
+  const { data: deliveries, error, count } = await admin
     .from('deliveries')
     .select(`
       id, scheduled_date, status, delivered_at, picked_up_at, failed_reason,

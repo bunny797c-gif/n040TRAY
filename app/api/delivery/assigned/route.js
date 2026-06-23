@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { todayIST } from '@/lib/dates';
 
 export async function GET(req) {
@@ -10,7 +11,7 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const date = searchParams.get('date') || todayIST();
 
-  // Get partner record
+  // Get partner record (user's own row — RLS allows this)
   const { data: partner } = await supabase
     .from('delivery_partners')
     .select('id')
@@ -19,7 +20,9 @@ export async function GET(req) {
 
   if (!partner) return NextResponse.json({ error: 'Not a delivery partner' }, { status: 403 });
 
-  const { data: deliveries, error } = await supabase
+  // Use admin client to bypass RLS on subscriptions/addresses/profiles joins
+  const admin = createAdminClient();
+  const { data: deliveries, error } = await admin
     .from('deliveries')
     .select(`
       id, scheduled_date, status, picked_up_at, failed_reason, notes,
